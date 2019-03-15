@@ -1,0 +1,42 @@
+global setshit = false;
+global Init = true;
+global counter = 64;
+
+def spawn_thing_at_random_pos() 
+{
+	var c2dd = find_random_land_pos_c2d();
+	var c3d = Coord3D();
+	coord2D_to_coord3D(c2dd,c3d);
+	createThing(T_EFFECT,M_EFFECT_RAISE_LAND,TRIBE_HOSTBOT,c3d,false,false);
+}
+
+def OnTurn()
+{
+	if (!setshit)
+	{
+		global c2d = Coord2D();
+		c2d.Xpos = G_RANDOM(65535);
+		c2d.Zpos = G_RANDOM(65535);
+		setshit = true;
+	}
+	
+	if (Init)
+	{
+			c2d.Xpos += 256;
+			--counter;
+			
+			if (counter == 0)
+			{
+				c2d.Zpos += 128;
+				counter = 64;
+			}
+			
+			if (is_map_point_land(c2d) == FALSE)
+			{
+				var c2dd = c2d;
+				var c3d = Coord3D();
+				coord2D_to_coord3D(c2dd,c3d);
+				createThing(T_EFFECT,M_EFFECT_RAISE_LAND,TRIBE_HOSTBOT,c3d,false,false);
+			}
+	}
+}

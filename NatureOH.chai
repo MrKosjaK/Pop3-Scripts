@@ -1,0 +1,235 @@
+global init = 1;
+global get_trees = 1;
+
+global tree_mother = Vector();
+
+global tree_num = 0;
+global tree_num_mother = 0;
+global tree_num_children = 0;
+global tree_max_num_mother = 5;
+global tree_max_num_children = 50;
+global debug_draw = 0;
+
+global welcomeMessage = 0;
+
+def OnLoad(StringVector sv, IntVector iv) 
+{
+	var loadVect = iv.size();
+	if (loadVect > 0)
+	{
+		init = iv[0];
+		get_trees = iv[1];
+		tree_num = iv[2];
+		tree_num_mother = iv[3];
+		tree_num_children = iv[4];
+		tree_max_num_mother = iv[5];
+		tree_max_num_children = iv[6];
+		debug_draw = iv[7];
+		welcomeMessage = iv[8];
+		
+		var vectElements = iv[9]; 
+		for (var i = 10; i < vectElements + 10; ++i)
+		{
+			tree_mother.push_back(ObjectProxy(iv[i])); 
+		}
+	}
+}
+
+def OnSave(StringVector sv, IntVector iv) 
+{
+	iv.push_back(init);
+	iv.push_back(get_trees);
+	iv.push_back(tree_num);
+	iv.push_back(tree_num_mother);
+	iv.push_back(tree_num_children);
+	iv.push_back(tree_max_num_mother);
+	iv.push_back(tree_max_num_children);
+	iv.push_back(debug_draw);
+	iv.push_back(welcomeMessage);
+	
+	var saveVect = tree_mother.size()
+	iv.push_back(saveVect);
+	for (var i = 0; i < saveVect; ++i)
+	{
+		iv.push_back(tree_mother[i].getThingNum());
+	}
+}
+
+def CountAllTrees(Thing t)
+{
+	if (t.Model <= 6)
+	{
+		++tree_num;
+	}
+	
+	return true;
+}
+
+def ChooseMotherTrees(Thing t)
+{
+	if (tree_num_mother < tree_max_num_mother)
+	{
+		if (G_RANDOM(4) == 1)
+		{
+			if (t.Model <= 6)
+			{
+				tree_mother.push_back(ObjectProxy(t));
+				++tree_num_mother;
+			}
+		}
+		
+		return true;
+	}
+	
+	return false;
+}
+
+def randSign()
+{
+	var sign = -1;
+	
+	if (G_RANDOM(2) == 0)
+	{
+		sign = 1;
+	}
+	
+	return sign;
+}
+
+def Spread(thing)
+{
+	if (!thing.isNull())
+	{
+		if (G_RANDOM(1001) > 981)
+		{
+			var child = thing.get();
+			var NewMapPos = Coord3D();
+			NewMapPos = child.Pos.D3;
+			NewMapPos.Xpos += (G_RANDOM(8) * 256) * randSign();
+			NewMapPos.Zpos += (G_RANDOM(8) * 256) * randSign();
+			CREATE_THING_WITH_PARAMS4(T_SCENERY,M_SCENERY_DORMANT_TREE,TRIBE_HOSTBOT,NewMapPos,T_SCENERY,G_RANDOM(6),16,16);
+			++tree_num_children
+		}
+	}
+	
+	return false;
+}
+
+def InitMother()
+{
+	var tree_old = Vector();
+	var count = tree_mother.size();
+	for (var i = 0; i < count; ++i)
+	{
+		var tree := tree_mother[i];
+		if (!tree.isNull())
+		{
+			if (EVERY_2POW_TURNS(5))
+			{
+				if (tree_num_children < tree_max_num_children)
+				{
+					Spread(tree);
+				}
+			}
+			
+			var treeThing = tree.get();
+			if (treeThing.u.Scenery.GrowthRate != 0)
+			{
+				if (debug_draw == 1)
+				{
+					createThing(T_EFFECT,M_EFFECT_SMOKE,TRIBE_HOSTBOT,treeThing.Pos.D3,false,false);
+				}
+				
+				if (treeThing.u.Scenery.ResourceRemaining == 400)
+				{
+					treeThing.u.Scenery.GrowthRate = -2;
+					treeThing.u.Scenery.ResourceRemaining -= 1;
+				}
+				
+				if (treeThing.u.Scenery.ResourceRemaining < 150)
+				{
+					treeThing.u.Scenery.GrowthRate = 0;
+				}
+			}
+			else
+			{
+				tree_old.push_back(i);
+				if (!treeThing.is_var_null())
+				{
+					DestroyThing(treeThing);
+				}
+			}
+		}
+		else
+		{
+			tree_old.push_back(i);
+		}
+	}
+	
+	count = tree_old.size();
+	if (count != 0)
+	{
+		for (var i = count - 1; i >= 0; --i)
+		{
+			tree_mother.erase_at(tree_old[i]);
+			--tree_num_mother;
+			if (tree_num_children >= 5)
+			{
+				tree_num_children -= 5;
+			}
+			
+			if (i == 0)
+			{
+				break;
+			}
+		}
+	}
+	
+	if (tree_mother.size() == 0)
+	{
+		get_trees = 1;
+	}
+}
+
+def OnTurn()
+{
+	if (welcomeMessage == 0)
+	{
+		notify_user("Made by MrKosjaK");
+		welcomeMessage = 1;
+	}
+	
+	if (init == 1)
+	{
+		if (get_trees == 1)
+		{
+			if (EVERY_2POW_TURNS(3))
+			{
+				tree_num = 0;
+				ProcessGlobalTypeList(T_SCENERY, CountAllTrees);
+				if (tree_num != 0)
+				{
+					if (tree_mother.size() < 2)
+					{
+						ProcessGlobalTypeList(T_SCENERY, ChooseMotherTrees);
+					}
+					else
+					{
+						get_trees = 0;
+					}
+				}
+				else
+				{
+					init = 0;
+				}
+			}
+		}
+		else
+		{
+			if (EVERY_2POW_TURNS(3))
+			{
+				InitMother();
+			}
+		}
+	}
+}

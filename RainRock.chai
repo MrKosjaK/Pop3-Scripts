@@ -1,0 +1,66 @@
+global num_rocks = 0;
+global clearState = 0;
+global init = true;
+
+def clearRocks(Thing t)
+{
+	if (t.Model == M_SCENERY_ROCK)
+	{
+		DestroyThing(t);
+	}
+	
+	return true;
+}
+
+def OnTurn()
+{
+	if (init)
+	{
+		for (var i = 0; i < 256; ++i)
+		{
+			if (EVERY_2POW_TURNS(1))
+			{
+				if (num_rocks < 32000)
+				{
+					++num_rocks
+					var final_crd = Coord3D();
+					final_crd.Ypos = 2048;
+					final_crd.Xpos = G_RANDOM(65536);
+					final_crd.Zpos = G_RANDOM(65536);
+					createThing(T_SCENERY,M_SCENERY_ROCK,TRIBE_HOSTBOT,final_crd,false,false);
+				}
+			}
+		}
+	}
+
+	if (EVERY_2POW_TURNS(9))
+	{
+		num_rocks = 0;
+	}
+}
+
+def OnKeyDown(key)
+{
+    // Will desync multiplayer
+    if (isFlagEnabled(gnsi.Flags, GNS_NETWORK) == 0)
+    {
+        if (key == LB_KEY_B)
+        {
+            ProcessGlobalTypeList(T_SCENERY, clearRocks);
+            num_rocks = 0;
+        }
+        
+        if (key == LB_KEY_V)
+        {
+            if (init)
+            {
+                init = false;
+            }
+            else
+            {
+                gsi.GameSpeed = 0;
+                init = true;
+            }
+        }
+    }
+}
