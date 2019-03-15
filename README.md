@@ -1,2 +1,2 @@
-# Pop3-Scripts
-Script3 scripts for Populous: The Beginning
+# Installation
+Place scripts in \Scripts folder.
