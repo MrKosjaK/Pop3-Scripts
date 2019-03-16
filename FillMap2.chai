@@ -1,0 +1,13 @@
+for (var i = 0; i < 128; ++i)
+{
+	var mult_x = i*2;
+	for (var k = 0; k < 128; ++k)
+	{
+		var mult_z = k*2
+		var c3d = MAP_XZ_2_WORLD_XYZ(mult_x, mult_z);
+		createThing(T_EFFECT, M_EFFECT_RAISE_LAND, TRIBE_HOSTBOT, c3d, false, false);
+	}
+}
+
+log("Map is filled with land.");
+exit();
