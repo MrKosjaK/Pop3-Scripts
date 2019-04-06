@@ -1,0 +1,43 @@
+/*
+	Pretty much fills map with lava. Made by MrKosjaK.
+*/
+
+global setshit = false;
+global Init = true;
+global counter = 8;
+
+def spawn_thing_at_random_pos() 
+{
+	var c2dd = find_random_land_pos_c2d();
+	var c3d = Coord3D();
+	coord2D_to_coord3D(c2dd,c3d);
+	createThing(T_EFFECT,M_EFFECT_RAISE_LAND,TRIBE_HOSTBOT,c3d,false,false);
+}
+
+def OnTurn()
+{
+	if (!setshit)
+	{
+		global c2d = Coord2D();
+		c2d.Xpos = G_RANDOM(65535);
+		c2d.Zpos = G_RANDOM(65535);
+		setshit = true;
+	}
+	
+	if (Init)
+	{
+
+		for (var i = 0; i < 4; ++i)
+		{
+			if (EVERY_2POW_TURNS(2))
+			{
+				c2d.Xpos = G_RANDOM(65535);
+				c2d.Zpos = G_RANDOM(65535);
+				var c2dd = c2d;
+				var c3d = Coord3D();
+				coord2D_to_coord3D(c2dd,c3d);
+				createThing(T_EFFECT,M_EFFECT_LAVA_FLOW,TRIBE_HOSTBOT,c3d,false,false);
+			}
+		}
+	}
+}

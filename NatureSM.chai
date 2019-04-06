@@ -1,0 +1,54 @@
+/*
+	Originally made by Brandan, ported (kinda) by MrKosjaK.
+*/
+
+global max_num_searches = 300;
+global max_num_creep	= 5;
+global max_num_burst	= 7;
+
+def ProcessErode()
+{
+	for (var i = 0; i < G_RANDOM(max_num_burst); ++i)
+	{
+		for (var o = 0; o < G_RANDOM(max_num_searches); ++o)
+		{
+			var position = MAP_XZ_2_WORLD_XYZ(G_RANDOM(256), G_RANDOM(256));
+			var me_pos = world_coord3d_to_map_ptr(position);
+			if (is_map_elem_coast(me_pos) >= 1)
+			{
+				createThing(T_EFFECT, M_EFFECT_EROSION, TRIBE_HOSTBOT, position, false, false);
+				break;
+			}
+		}
+	}
+}
+
+def ProcessCreep()
+{
+	for (var i = 0; i < G_RANDOM(max_num_creep); ++i)
+	{
+		for (var o = 0; o < max_num_searches; ++o)
+		{
+			var position = MAP_XZ_2_WORLD_XYZ(G_RANDOM(256), G_RANDOM(256));
+			var me_pos = world_coord3d_to_map_ptr(position);
+			if (is_map_elem_coast(me_pos) >= 1)
+			{
+				createThing(T_EFFECT, M_EFFECT_RAISE_LAND, TRIBE_HOSTBOT, position, false, false);
+				break;
+			}
+		}
+	}
+}
+
+def OnTurn()
+{
+	if (EVERY_2POW_TURNS(4))
+	{
+		ProcessCreep();
+	}
+	
+	if (EVERY_2POW_TURNS(5))
+	{
+		ProcessErode();
+	}
+}
