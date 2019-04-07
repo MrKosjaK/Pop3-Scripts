@@ -78,10 +78,6 @@ def MakeStoneHead(coord)
 	head.u.Scenery.HeadType = 2;
 	var random = G_RANDOM(rndAngle.size());
 	head.AngleXZ = rndAngle[random];
-/* 	for (var i = 0; i < 35; ++i)
-	{
-		disableFlag(head.Flags, i);
-	} */
 	
 	stonehVect.push_back(ObjectProxy(head));
 }
