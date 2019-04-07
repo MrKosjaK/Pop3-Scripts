@@ -28,6 +28,7 @@ global discVect = Vector();
 global stonehVect = Vector();
 global amount = 5 + G_RANDOM(16);
 global realstones = 0;
+global incr = 0;
 
 def FindLandSpot()
 {
@@ -77,6 +78,10 @@ def MakeStoneHead(coord)
 	head.u.Scenery.HeadType = 2;
 	var random = G_RANDOM(rndAngle.size());
 	head.AngleXZ = rndAngle[random];
+/* 	for (var i = 0; i < 35; ++i)
+	{
+		disableFlag(head.Flags, i);
+	} */
 	
 	stonehVect.push_back(ObjectProxy(head));
 }
@@ -85,6 +90,7 @@ def MakeTrigger(coord, headtolink, thing1)
 {
 	var trigger = createThing(T_GENERAL, M_GENERAL_TRIGGER, TRIBE_HOSTBOT, coord, false, false);
 	
+	trigger.u.Trigger.Flags = 33;
 	trigger.u.Trigger.TriggerType = TRIGGER_TYPE_PROXIMITY;
 	trigger.u.Trigger.CellRadius = 1;
 	trigger.u.Trigger.NumOccurences = 1 + G_RANDOM(6);
@@ -107,12 +113,18 @@ def MakeTrigger(coord, headtolink, thing1)
 for (var i = 0; i < amount; ++i)
 {
 	var c3d = FindLandSpot();
-	centre_coord3d_on_block(c3d);
-	
-	MakeDiscovery(c3d);
-	MakeStoneHead(c3d);
-	MakeTrigger(c3d, stonehVect[i], discVect[i]);
-	
+	var c2dp = Coord2D();
+	coord3D_to_coord2D(c3d, c2dp);
+	if (is_map_point_land(c2dp) == 1)
+	{
+		centre_coord3d_on_block(c3d);
+		
+		MakeDiscovery(c3d);
+		MakeStoneHead(c3d);
+		MakeTrigger(c3d, stonehVect[incr], discVect[incr]);
+		++incr
+	}
+
 	//log("==================================================");
 	//log("Position X: " + c3d.Xpos.to_string());
 	//log("Position Z: " + c3d.Zpos.to_string());
