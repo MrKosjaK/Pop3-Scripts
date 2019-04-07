@@ -26,12 +26,12 @@ global pickSpell = [
 
 global discVect = Vector();
 global stonehVect = Vector();
-global amount = 10 + G_RANDOM(30);
+global amount = 5 + G_RANDOM(16);
 global realstones = 0;
 
 def FindLandSpot()
 {
-	var tries = 64;
+	var tries = 16;
 	var coord = Coord3D();
 	coord.Xpos = G_RANDOM(65536);
 	coord.Zpos = G_RANDOM(65536);
