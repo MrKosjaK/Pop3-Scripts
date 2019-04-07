@@ -1,0 +1,122 @@
+/*
+	Script randomly places stone heads on land with random discovery and trigger properties.
+	
+	Made by MrKosjaK.
+*/
+
+global rndAngle = [
+				0,
+				512,
+				1024,
+				1536
+];
+global pickSpell = [
+				M_SPELL_BLAST,
+				M_SPELL_INSECT_PLAGUE,
+				M_SPELL_LAND_BRIDGE,
+				M_SPELL_LIGHTNING_BOLT,
+				M_SPELL_HYPNOTISM,
+				M_SPELL_SWAMP,
+				M_SPELL_EROSION,
+				M_SPELL_EARTHQUAKE,
+				M_SPELL_FIRESTORM
+];
+
+global discVect = Vector();
+global stonehVect = Vector();
+global amount = 10 + G_RANDOM(30);
+global realstones = 0;
+
+def FindLandSpot()
+{
+	var tries = 64;
+	var coord = Coord3D();
+	coord.Xpos = G_RANDOM(65536);
+	coord.Zpos = G_RANDOM(65536);
+	while (tries > 0)
+	{
+		var me_pos = world_coord3d_to_map_ptr(coord);
+		if (is_map_elem_sea_or_coast(me_pos) == 0)
+		{
+			++realstones;
+			break;
+		}
+		else
+		{
+			coord.Xpos = G_RANDOM(65536);
+			coord.Zpos = G_RANDOM(65536);
+		}
+		
+		--tries;
+	}
+	
+	return coord;
+}
+
+def MakeDiscovery(coord)
+{
+	var discovery = createThing(T_GENERAL, M_GENERAL_DISCOVERY, TRIBE_HOSTBOT, coord, false, false);
+	discovery.u.Discovery.DiscoveryType = 11;
+	
+	var random_spell = G_RANDOM(pickSpell.size());
+	discovery.u.Discovery.DiscoveryModel = pickSpell[random_spell];
+	discovery.u.Discovery.AvailabilityType = 3;
+	discovery.u.Discovery.TriggerType = 1;
+	discVect.push_back(ObjectProxy(discovery));
+	
+	//log("==================================================");
+	//log("Creating stone head.");
+	//log("Discovery: " + discovery.u.Discovery.DiscoveryModel.to_string());
+}
+
+def MakeStoneHead(coord)
+{
+	var head = createThing(T_SCENERY, M_SCENERY_HEAD, TRIBE_HOSTBOT, coord, false, false);
+	head.u.Scenery.HeadType = 2;
+	var random = G_RANDOM(rndAngle.size());
+	head.AngleXZ = rndAngle[random];
+	
+	stonehVect.push_back(ObjectProxy(head));
+}
+
+def MakeTrigger(coord, headtolink, thing1)
+{
+	var trigger = createThing(T_GENERAL, M_GENERAL_TRIGGER, TRIBE_HOSTBOT, coord, false, false);
+	
+	trigger.u.Trigger.TriggerType = TRIGGER_TYPE_PROXIMITY;
+	trigger.u.Trigger.CellRadius = 1;
+	trigger.u.Trigger.NumOccurences = 1 + G_RANDOM(6);
+	trigger.u.Trigger.TriggerCount = 1 + G_RANDOM(6);
+	trigger.u.Trigger.InactiveTime = 1;
+	trigger.u.Trigger.PrayTime = 30 + G_RANDOM(270);
+	trigger.u.Trigger.CreatePlayerOwned = 1;
+	trigger.u.Trigger.HeadThingIdx = (headtolink.getThingNum());
+	uninit_thing(thing1.get());
+	trigger.u.Trigger.EditorThingIdxs[0] = thing1.getThingNum();
+	
+	//log("==================================================");
+	//log("Trigger's type: " + trigger.u.Trigger.TriggerType.to_string());
+	//log("Cell radius: " + trigger.u.Trigger.CellRadius.to_string());
+	//log("Number of occurences: " + trigger.u.Trigger.NumOccurences.to_string());
+	//log("Number of prayers: " + trigger.u.Trigger.TriggerCount.to_string());
+	//log("Pray time: " + trigger.u.Trigger.PrayTime.to_string());
+}
+
+for (var i = 0; i < amount; ++i)
+{
+	var c3d = FindLandSpot();
+	centre_coord3d_on_block(c3d);
+	
+	MakeDiscovery(c3d);
+	MakeStoneHead(c3d);
+	MakeTrigger(c3d, stonehVect[i], discVect[i]);
+	
+	//log("==================================================");
+	//log("Position X: " + c3d.Xpos.to_string());
+	//log("Position Z: " + c3d.Zpos.to_string());
+}
+
+//log("==================================================");
+notify_user("Spawned " + realstones.to_string() + " stone heads.");
+//log("Finished sequence of creating stone heads. Enjoy praying them all.");
+exit();
