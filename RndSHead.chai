@@ -66,10 +66,6 @@ def MakeDiscovery(coord)
 	discovery.u.Discovery.AvailabilityType = 3;
 	discovery.u.Discovery.TriggerType = 1;
 	discVect.push_back(ObjectProxy(discovery));
-	
-	//log("==================================================");
-	//log("Creating stone head.");
-	//log("Discovery: " + discovery.u.Discovery.DiscoveryModel.to_string());
 }
 
 def MakeStoneHead(coord)
@@ -95,15 +91,10 @@ def MakeTrigger(coord, headtolink, thing1)
 	trigger.u.Trigger.PrayTime = 30 + G_RANDOM(270);
 	trigger.u.Trigger.CreatePlayerOwned = 1;
 	trigger.u.Trigger.HeadThingIdx = (headtolink.getThingNum());
-	uninit_thing(thing1.get());
+	var this_thing = thing1.get();
+	gsi.SpellsPresentOnLevel |= (1 << this_thing.u.Discovery.DiscoveryModel);
+	uninit_thing(this_thing);
 	trigger.u.Trigger.EditorThingIdxs[0] = thing1.getThingNum();
-	
-	//log("==================================================");
-	//log("Trigger's type: " + trigger.u.Trigger.TriggerType.to_string());
-	//log("Cell radius: " + trigger.u.Trigger.CellRadius.to_string());
-	//log("Number of occurences: " + trigger.u.Trigger.NumOccurences.to_string());
-	//log("Number of prayers: " + trigger.u.Trigger.TriggerCount.to_string());
-	//log("Pray time: " + trigger.u.Trigger.PrayTime.to_string());
 }
 
 for (var i = 0; i < amount; ++i)
@@ -120,13 +111,7 @@ for (var i = 0; i < amount; ++i)
 		MakeTrigger(c3d, stonehVect[incr], discVect[incr]);
 		++incr
 	}
-
-	//log("==================================================");
-	//log("Position X: " + c3d.Xpos.to_string());
-	//log("Position Z: " + c3d.Zpos.to_string());
 }
 
-//log("==================================================");
 notify_user("Spawned " + realstones.to_string() + " stone heads.");
-//log("Finished sequence of creating stone heads. Enjoy praying them all.");
 exit();
