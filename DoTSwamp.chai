@@ -1,0 +1,135 @@
+/*
+	This script replaces instant-kill swamp with damage over time one. Made by MrKosjaK.
+*/
+
+global init = TRUE;
+global activeSwamp = Vector();
+
+def DelMist(Thing)
+{
+	if (Thing.Model == M_EFFECT_SWAMP_MIST)
+	{
+		DestroyThing(Thing);
+	}
+	
+	if (Thing.Model == M_EFFECT_REEDY_GRASS)
+	{
+		DestroyThing(Thing);
+	}
+	
+	return true;
+}
+
+def CreateSwamp(coord)
+{
+	var coordVect = Vector();
+	var this_coord = coord;
+	for (var i = 0; i < 9; ++i)
+	{
+		var crd = Coord3D();
+		coordVect.insert_at(i, crd);
+	}
+	
+	centre_coord3d_on_block(this_coord);
+	coordVect[0] = this_coord;
+	coordVect[1].Xpos = this_coord.Xpos + 256 + 128 + 64 + 32;
+	coordVect[1].Zpos = this_coord.Zpos;
+	coordVect[2].Xpos = this_coord.Xpos - 256 - 128 - 64 - 32;
+	coordVect[2].Zpos = this_coord.Zpos;
+	coordVect[3].Xpos = this_coord.Xpos;
+	coordVect[3].Zpos = this_coord.Zpos + 256 + 128 + 64 + 32;
+	coordVect[4].Xpos = this_coord.Xpos;
+	coordVect[4].Zpos = this_coord.Zpos - 256 - 128 - 64 - 32;
+	coordVect[5].Xpos = this_coord.Xpos + 256 + 128 + 64 + 32;
+	coordVect[5].Zpos = this_coord.Zpos + 256 + 128 + 64 + 32;
+	coordVect[6].Xpos = this_coord.Xpos + 256 + 128 + 64 + 32;
+	coordVect[6].Zpos = this_coord.Zpos - 256 - 128 - 64 - 32;
+	coordVect[7].Xpos = this_coord.Xpos - 256 - 128 - 64 - 32;
+	coordVect[7].Zpos = this_coord.Zpos + 256 + 128 + 64 + 32;
+	coordVect[8].Xpos = this_coord.Xpos - 256 - 128 - 64 - 32;
+	coordVect[8].Zpos = this_coord.Zpos - 256 - 128 - 64 - 32;
+	
+	for (var c = 0; c < coordVect.size(); ++c)
+	{
+		coordVect[c].Ypos -= 64;
+	}
+	
+	coordVect.for_each(fun(c3d)
+	{
+		createThing(T_EFFECT, M_EFFECT_SWAMP_MIST, TRIBE_HOSTBOT, c3d, false, false);
+		createThing(T_EFFECT, M_EFFECT_REEDY_GRASS, TRIBE_HOSTBOT, c3d, false, false);
+	});
+	
+	activeSwamp.push_back(this_coord);
+}
+
+def InitSwamp()
+{
+	activeSwamp.for_each(fun(coord)
+	{
+		var pmw = Vector();
+		var map_crd = coord;
+		for (var v = 0; v < 9; ++v)
+		{
+			pmw.insert_at(v, map_crd);
+		}
+		
+		pmw[1].Xpos += 256 + 128;
+		pmw[2].Xpos -= 256 + 128;
+		pmw[3].Zpos += 256 + 128;
+		pmw[4].Zpos -= 256 + 128;
+		pmw[5].Xpos += 256 + 128;
+		pmw[5].Zpos += 256 + 128;
+		pmw[6].Xpos += 256 + 128;
+		pmw[6].Zpos -= 256 + 128;
+		pmw[7].Xpos -= 256 + 128;
+		pmw[7].Zpos += 256 + 128;
+		pmw[8].Xpos -= 256 + 128;
+		pmw[8].Zpos -= 256 + 128;
+		
+		for (var mn = 0; mn < pmw.size(); ++mn)
+		{
+			var this_me_elem = world_coord3d_to_map_ptr(pmw[mn]);
+			for (var pn = 0; pn < 4; ++pn)
+			{
+				if (!this_me_elem.PlayerMapWho[pn].isEmpty())
+				{
+					this_me_elem.PlayerMapWho[pn].processList(fun(Thing t)
+					{
+						if (t.Type == T_PERSON && !t.is_var_null())
+						{
+							damage_person(t, TRIBE_HOSTBOT, 128, 1);
+						}
+						
+						return true;
+					});
+				}
+			}
+		}
+	});
+}
+
+def OnTurn()
+{
+	if (init == 1)
+	{
+		if (EVERY_2POW_TURNS(3))
+		{
+			InitSwamp();
+		}
+		if (EVERY_2POW_TURNS(12))
+		{
+			activeSwamp.clear();
+			ProcessGlobalTypeList(T_EFFECT, DelMist);
+		}
+	}
+}
+
+def OnCreateThing(Thing)
+{
+	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP)
+	{
+		CreateSwamp(Thing.Pos.D3);
+		DestroyThing(Thing);
+	}
+}
