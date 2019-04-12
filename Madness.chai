@@ -1,0 +1,118 @@
+/*
+	True madness. Made by MrKosjaK.
+*/
+
+global personTrap = [
+	M_EFFECT_SIMPLE_BLAST,
+	M_EFFECT_LIGHTNING_BOLT,
+	M_EFFECT_INSECT_PLAGUE,
+	M_EFFECT_SPHERE_EXPLODE_AND_FIRE,
+	M_EFFECT_LAVA_SQUARE,
+	M_EFFECT_SPELL_BLAST,
+	M_EFFECT_SHIELD,
+	M_EFFECT_BLOODLUST,
+	M_EFFECT_INVISIBILITY,
+	M_EFFECT_RAISE_LAND,
+	M_EFFECT_LOWER_LAND
+];
+global buildingTrap = [
+	M_EFFECT_LIGHTNING_BOLT,
+	M_EFFECT_SPHERE_EXPLODE_AND_FIRE,
+	M_EFFECT_LAVA_SQUARE,
+	M_EFFECT_EXPLODE_BLDG_PARTIAL,
+	M_EFFECT_EROSION,
+	M_EFFECT_FIRESTORM,
+	M_EFFECT_WHIRLWIND,
+	M_EFFECT_EARTHQUAKE
+];
+global sceneryTrap = [
+	M_EFFECT_SWAMP,
+	M_EFFECT_LAVA_FLOW,
+	M_EFFECT_FIRESTORM,
+	M_EFFECT_EARTHQUAKE,
+	M_EFFECT_EROSION,
+	M_EFFECT_WHIRLWIND,
+	M_EFFECT_DIP,
+	M_EFFECT_RISE,
+	M_EFFECT_HILL,
+	M_EFFECT_VALLEY
+];
+global spellTrap = [
+	M_EFFECT_LIGHTNING_BOLT,
+	M_EFFECT_WHIRLWIND,
+	M_EFFECT_EARTHQUAKE,
+	M_EFFECT_SPARKLE,
+	M_EFFECT_SMOKE,
+	M_EFFECT_CONVERSION_FLASH,
+	M_EFFECT_SMALL_SPARKLE,
+	M_EFFECT_LAVA_SQUARE,
+	M_EFFECT_GROUND_SHOCKWAVE
+];
+global internalTrap = [
+	M_EFFECT_SIMPLE_BLAST,
+	M_EFFECT_LAVA_SQUARE,
+	M_EFFECT_LIGHTNING_BOLT,
+	M_EFFECT_INSECT_PLAGUE,
+	M_EFFECT_SHIELD,
+	M_EFFECT_BLOODLUST,
+	M_EFFECT_HYPNOTISM
+];
+
+def OnCreateThing(Thing)
+{
+	if (Thing.Type == T_PERSON)
+	{
+		if (G_RANDOM(10) == 0)
+		{
+			var random = G_RANDOM(personTrap.size());
+			var random_pn = G_RANDOM(4);
+			createThing(T_EFFECT, personTrap[random], random_pn, Thing.Pos.D3, false, false);
+		}
+	}
+	
+	if (Thing.Type == T_BUILDING)
+	{
+		if (G_RANDOM(10) == 0)
+		{
+			var random2 = G_RANDOM(buildingTrap.size());
+			var random2_pn = G_RANDOM(4);
+			createThing(T_EFFECT, buildingTrap[random2], random2_pn, Thing.Pos.D3, false, false);
+		}
+	}
+	
+	if (Thing.Type == T_SCENERY)
+	{
+		if (Thing.Model != M_SCENERY_FIRE && Thing.Model != M_SCENERY_ROCK)
+		{
+			if (G_RANDOM(10) == 0)
+			{
+				var random3 = G_RANDOM(sceneryTrap.size());
+				var random3_pn = G_RANDOM(4);
+				createThing(T_EFFECT, sceneryTrap[random3], random3_pn, Thing.Pos.D3, false, false);
+			}
+		}
+	}
+	
+	if (Thing.Type == T_SPELL)
+	{
+		if (G_RANDOM(10) == 0)
+		{
+			var random4 = G_RANDOM(spellTrap.size());
+			var random4_pn = G_RANDOM(4);
+			createThing(T_EFFECT, spellTrap[random4], random4_pn, Thing.Pos.D3, false, false);
+		}
+	}
+	
+	if (Thing.Type == T_INTERNAL)
+	{
+		if (Thing.Model == M_INTERNAL_PRE_FIGHT || Thing.Model == M_INTERNAL_FIGHT)
+		{
+			if (G_RANDOM(10) == 0)
+			{
+				var random5 = G_RANDOM(internalTrap.size());
+				var random5_pn = G_RANDOM(4);
+				createThing(T_EFFECT, internalTrap[random5], random5_pn, Thing.Pos.D3, false, false);
+			}
+		}
+	}
+}
