@@ -40,6 +40,12 @@ class SwampT
     {
         var crd = Coord3D();
         var coordVect = Vector();
+		var colour = [
+			2,
+			-2,
+			-1,
+			1
+		]
         for (var i = 0; i < 9; ++i)
         {
             coordVect.insert_at(i, crd);
@@ -69,9 +75,11 @@ class SwampT
             coordVect[c].Ypos -= 64;
         }
         
-        coordVect.for_each(fun[this](c3d)
+        coordVect.for_each(fun[this, colour](c3d)
         {
-            this.Mist.push_back(createThing(T_EFFECT, M_EFFECT_SWAMP_MIST, TRIBE_HOSTBOT, c3d, false, false));
+            var clr_mist = createThing(T_EFFECT, M_EFFECT_SWAMP_MIST, TRIBE_HOSTBOT, c3d, false, false);
+            clr_mist.DrawInfo.Alpha = colour[this.owner];
+            this.Mist.push_back(clr_mist);
             this.Grass.push_back(createThing(T_EFFECT, M_EFFECT_REEDY_GRASS, TRIBE_HOSTBOT, c3d, false, false));
         });
     }
@@ -92,9 +100,12 @@ class SwampT
     {
         ConvertObjectListVectorToThingVector(this.mapptr_cache).for_each(fun[this](t)
         {
-            if (t.Type == T_PERSON) 
+            if (t.Type == T_PERSON && 
+                !isFlagEnabled(t.Flags2, TF2_THING_IN_AIR) &&
+                t.Owner != this.owner && 
+                are_players_allied(t.Owner, this.owner) == FALSE && is_person_in_airship(t) == FALSE) 
             { 
-                damage_person(t, this.owner, this.dmg, 1); 
+                damage_person(t, this.owner, this.dmg, TRUE); 
             }
         });
     }
