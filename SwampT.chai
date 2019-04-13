@@ -1,11 +1,12 @@
 class SwampT
 {
-    def SwampT(_coord)
+    def SwampT(_coord, _owner)
     {
         this.coord          = _coord;
         this.Mist           = ThingVector();
         this.Grass          = ThingVector();
         this.mapptr_cache   = ObjectListVector();
+        this.owner          = _owner;
         
         var  pmw            = Vector();
         for (var v = 0; v < 9; ++v)
@@ -93,7 +94,7 @@ class SwampT
         {
             if (t.Type == T_PERSON) 
             { 
-                damage_person(t, TRIBE_HOSTBOT, this.dmg, 1); 
+                damage_person(t, this.owner, this.dmg, 1); 
             }
         });
     }
@@ -103,6 +104,7 @@ class SwampT
         this.dmg = _dmg;
     }
     
+	var		owner;
     var     dmg;
     var     coord;
     var     Mist;
