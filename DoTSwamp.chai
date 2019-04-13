@@ -15,9 +15,9 @@ def DelMist()
     });
 }
 
-def CreateSwamp(coord)
+def CreateSwamp(coord, owner)
 {
-	activeSwamp.push_back(SwampT(coord));
+	activeSwamp.push_back(SwampT(coord, owner));
 }
 
 def InitSwamp()
@@ -49,7 +49,7 @@ def OnCreateThing(Thing)
 {
 	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP)
 	{
-		CreateSwamp(Thing.Pos.D3);
+		CreateSwamp(Thing.Pos.D3, Thing.Owner);
 		DestroyThing(Thing);
 	}
 }
