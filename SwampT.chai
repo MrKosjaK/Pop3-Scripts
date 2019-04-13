@@ -1,0 +1,111 @@
+class SwampT
+{
+    def SwampT(_coord)
+    {
+        this.coord          = _coord;
+        this.Mist           = ThingVector();
+        this.Grass          = ThingVector();
+        this.mapptr_cache   = ObjectListVector();
+        
+        var  pmw            = Vector();
+        for (var v = 0; v < 9; ++v)
+        {
+            var local_coord = this.coord;
+			centre_coord3d_on_block(local_coord);
+			pmw.insert_at(v, local_coord);
+        }
+        
+        pmw[1].Xpos += 256 + 128 + 64 + 32;
+        pmw[2].Xpos -= 256 + 128 + 64 + 32;
+        pmw[3].Zpos += 256 + 128 + 64 + 32;
+        pmw[4].Zpos -= 256 + 128 + 64 + 32;
+        pmw[5].Xpos += 256 + 128 + 64 + 32;
+        pmw[5].Zpos += 256 + 128 + 64 + 32;
+        pmw[6].Xpos += 256 + 128 + 64 + 32;
+        pmw[6].Zpos -= 256 + 128 + 64 + 32;
+        pmw[7].Xpos -= 256 + 128 + 64 + 32;
+        pmw[7].Zpos += 256 + 128 + 64 + 32;
+        pmw[8].Xpos -= 256 + 128 + 64 + 32;
+        pmw[8].Zpos -= 256 + 128 + 64 + 32;
+        
+        for (var mn = 0; mn < pmw.size(); ++mn)
+		{
+			this.mapptr_cache.push_back(world_coord3d_to_map_ptr(pmw[mn]).MapWhoList);
+		}
+        this.createThings();
+    }
+    
+    def createThings()
+    {
+        var crd = Coord3D();
+        var coordVect = Vector();
+        for (var i = 0; i < 9; ++i)
+        {
+            coordVect.insert_at(i, crd);
+        }
+        
+        centre_coord3d_on_block(this.coord);
+        coordVect[0]        = this.coord;
+        coordVect[1].Xpos   = this.coord.Xpos + 256 + 128 + 64 + 32;
+        coordVect[1].Zpos   = this.coord.Zpos;
+        coordVect[2].Xpos   = this.coord.Xpos - 256 - 128 - 64 - 32;
+        coordVect[2].Zpos   = this.coord.Zpos;
+        coordVect[3].Xpos   = this.coord.Xpos;
+        coordVect[3].Zpos   = this.coord.Zpos + 256 + 128 + 64 + 32;
+        coordVect[4].Xpos   = this.coord.Xpos;
+        coordVect[4].Zpos   = this.coord.Zpos - 256 - 128 - 64 - 32;
+        coordVect[5].Xpos   = this.coord.Xpos + 256 + 128 + 64 + 32;
+        coordVect[5].Zpos   = this.coord.Zpos + 256 + 128 + 64 + 32;
+        coordVect[6].Xpos   = this.coord.Xpos + 256 + 128 + 64 + 32;
+        coordVect[6].Zpos   = this.coord.Zpos - 256 - 128 - 64 - 32;
+        coordVect[7].Xpos   = this.coord.Xpos - 256 - 128 - 64 - 32;
+        coordVect[7].Zpos   = this.coord.Zpos + 256 + 128 + 64 + 32;
+        coordVect[8].Xpos   = this.coord.Xpos - 256 - 128 - 64 - 32;
+        coordVect[8].Zpos   = this.coord.Zpos - 256 - 128 - 64 - 32;
+        
+        for (var c = 0; c < coordVect.size(); ++c)
+        {
+            coordVect[c].Ypos -= 64;
+        }
+        
+        coordVect.for_each(fun[this](c3d)
+        {
+            this.Mist.push_back(createThing(T_EFFECT, M_EFFECT_SWAMP_MIST, TRIBE_HOSTBOT, c3d, false, false));
+            this.Grass.push_back(createThing(T_EFFECT, M_EFFECT_REEDY_GRASS, TRIBE_HOSTBOT, c3d, false, false));
+        });
+    }
+    
+    def destroyMe()
+    {
+        this.Mist.for_each(fun(Thing)
+        {
+            DestroyThing(Thing);
+        });
+        this.Grass.for_each(fun(Thing)
+        {
+            DestroyThing(Thing);
+        });
+    }
+    
+    def processSwamp()
+    {
+        ConvertObjectListVectorToThingVector(this.mapptr_cache).for_each(fun[this](t)
+        {
+            if (t.Type == T_PERSON) 
+            { 
+                damage_person(t, TRIBE_HOSTBOT, this.dmg, 1); 
+            }
+        });
+    }
+    
+    def setDamage(_dmg)
+    {
+        this.dmg = _dmg;
+    }
+    
+    var     dmg;
+    var     coord;
+    var     Mist;
+    var     Grass;
+    var     mapptr_cache;
+}
