@@ -1,3 +1,53 @@
+/*
+	@name World Utility
+	@author MrKosjaK
+	
+	@description
+	Declare world_utility() in a global variable like this:
+	global WU = world_utility();
+	After that you just use this prefix WU and use needed function like this:
+	WU.randomize_angle();
+	
+	@function randomize_angle() NOTE: only 8 angles.
+	@returns {int}
+	
+	@function randomize_model()
+	@returns {int}
+	
+	@function replace_with_new() NOTE: this is only for trees atm.
+	@param {struct Thing}
+	
+	@function count_trees()
+	@returns {int} Amount of trees
+	
+	@function calc_rad()
+	@param {Coord3D} Coords
+	@param {int} Degree 0-360
+	@param {int} Offset from the centre
+	@param {int} Radius
+	@returns {Coord3D}
+	
+	@function spawn_discovery_at_pos() NOTE: currently does only one shot spells
+	@param {Coord3D} Coords
+	@param {int} Discovery model aka spell.
+	
+	@function spawn_wilds_at_random_pos()
+	@param {int} Amount of wildies to spawn
+	
+	@function calc_eight_cells_around() NOTE: used for initial spawn of wildies for cor.
+	@param {Coord3D} Coords
+	
+	@function spawn_cor_wilds() NOTE: spawns 8 wilds around all shamans, this is used at start of level.
+	
+	@function random_pos() NOTE: does search for only land point.
+	@param {int} Amount of searches
+	@returns {Coord3D} Coords
+	
+	@function spawn_dormant_trees_at_random_pos()
+	@param {int} Amount of trees
+	@param {int} Dormant time in seconds
+*/
+
 class world_utility
 {
 	var rand_a;
@@ -50,6 +100,32 @@ class world_utility
 		});
 		
 		return n;
+	}
+	
+	def calc_rad(a, b, rmin, rmax)
+	{
+		var c3d = a;
+		var rot = double();
+		rot = b * PI / 180;
+		
+		var thing_x = double();
+		var thing_z = double();
+		thing_x = c3d.Xpos + (cos(rot) * (G_RANDOM(rmax)+rmin));
+		thing_z = c3d.Zpos + (sin(rot) * (G_RANDOM(rmax)+rmin));
+		var final_c3d = Coord3D();
+		final_c3d.Xpos = thing_x;
+		final_c3d.Zpos = thing_z;
+		
+		return final_c3d;
+	}
+	
+	def spawn_discovery_at_pos(a, b)
+	{
+		var discovery = createThing(T_GENERAL, M_GENERAL_DISCOVERY, TRIBE_HOSTBOT, a, false, false);
+		discovery.u.Discovery.DiscoveryType = 11;
+		discovery.u.Discovery.DiscoveryModel = b;
+		discovery.u.Discovery.AvailabilityType = 3;
+		discovery.u.Discovery.TriggerType = 1;
 	}
 	
 	def spawn_wilds_at_random_pos(amount)
