@@ -1,0 +1,180 @@
+class Gas
+{
+	var gas_thing;
+	var gas_type;
+	var gas_dmg;
+	
+	def Gas(_gas_thing, _gas_type, _gas_dmg)
+	{
+		this.gas_thing = _gas_thing;
+		this.gas_type  = _gas_type;
+		this.gas_dmg   = _gas_dmg;
+	}
+	
+	def gas_sign()
+	{
+		var random_sign = -1;
+
+		if (G_RANDOM(2) == 0)
+		{
+			random_sign = 1;
+		}
+		return random_sign;
+	}
+	
+	def gas_find_spot_near(_crd)
+	{
+		var crd = _crd;
+		crd.Xpos += (G_RANDOM(3)+1 * 256) * this.gas_sign();
+		crd.Zpos += (G_RANDOM(3)+1 * 256) * this.gas_sign();
+		centre_coord3d_on_block(crd);
+		return crd;
+	}
+	
+	def gas_move()
+	{
+		var gas = this.gas_thing.get();
+		move_thing_within_mapwho(gas, this.gas_find_spot_near(gas.Pos.D3));
+	}
+	
+	def gas_random_teleport()
+	{
+		var crdd = Coord3D();
+		crdd.Xpos = G_RANDOM(65536);
+		crdd.Zpos = G_RANDOM(65536);
+		crdd.Ypos = G_RANDOM(1024);
+		centre_coord3d_on_block(crdd);
+		return crdd;
+	}
+	
+	def gas_process_ender()
+	{
+		var mw;
+		mw := world_coord3d_to_map_ptr(this.gas_thing.get().Pos.D3);
+		if (!mw.MapWhoList.isEmpty())
+		{
+			mw.MapWhoList.processList(fun[this](Thing)
+			{
+				if (Thing.Type == T_PERSON)
+				{
+					if (Thing.Model > 1 && Thing.Model < 8 && is_thing_on_ground(Thing) == 1)
+					{
+						move_thing_within_mapwho(Thing, this.gas_random_teleport());
+						return true;
+					}
+				}
+				
+				return true;
+			});
+		}
+	}
+	
+	def gas_process_toxic(_dmg)
+	{
+		var mw;
+		mw := world_coord3d_to_map_ptr(this.gas_thing.get().Pos.D3);
+		if (!mw.MapWhoList.isEmpty())
+		{
+			mw.MapWhoList.processList(fun[this, _dmg](Thing)
+			{
+				if (Thing.Type == T_PERSON)
+				{
+					if (Thing.Model > 1 && Thing.Model < 8 && is_thing_on_ground(Thing) == 1)
+					{
+						damage_person(Thing, TRIBE_HOSTBOT, _dmg, TRUE);
+						return true;
+					}
+				}
+				
+				return true;
+			});
+		}
+	}
+	
+	def gas_process_heal()
+	{
+		var mw;
+		mw := world_coord3d_to_map_ptr(this.gas_thing.get().Pos.D3);
+		if (!mw.MapWhoList.isEmpty())
+		{
+			mw.MapWhoList.processList(fun[this](Thing)
+			{
+				if (Thing.Type == T_PERSON)
+				{
+					if (Thing.Model > 1 && Thing.Model < 8 && is_thing_on_ground(Thing) == 1)
+					{
+						if (Thing.u.Pers.Life < Thing.u.Pers.MaxLife)
+						{
+							Thing.u.Pers.Life += 256;
+							return true;
+						}
+					}
+				}
+				
+				return true;
+			});
+		}
+	}
+	
+	def gas_process()
+	{
+		if (!this.gas_thing.isNull())
+		{
+			if (this.gas_type == 2){
+				this.gas_process_ender();
+			}else if (this.gas_type == -2){
+				this.gas_process_toxic(this.gas_dmg*10);
+			}else if (this.gas_type == -1){
+				this.gas_process_toxic(this.gas_dmg*2);
+			}else if (this.gas_type == 1){
+				this.gas_process_heal();
+			}
+			
+			this.gas_move();
+			ensure_thing_on_ground(this.gas_thing.get());
+		}
+	}
+}
+
+global gases = Vector();
+global gases_amount = 64;
+global gases_int = 0;
+global colour = [2,-2,-1,1];
+
+def generate_rpos()
+{
+	var c3d = Coord3D();
+	c3d.Xpos = G_RANDOM(65536);
+	c3d.Zpos = G_RANDOM(65536);
+	return c3d;
+}
+
+def generate_gas()
+{
+	for (var i = gases_amount; i > 0; --i)
+	{
+		if (gases.size() < gases_amount)
+		{
+			var gas = createThing(T_EFFECT, M_EFFECT_SWAMP_MIST, TRIBE_HOSTBOT, generate_rpos(), false, false);
+			gas.DrawInfo.Alpha = colour[G_RANDOM(colour.size())];
+			gases.push_back(Gas(ObjectProxy(gas.ThingNum), gas.DrawInfo.Alpha, 100));
+		}
+	}
+}
+
+generate_gas();
+
+def OnTurn()
+{
+	if (gases_int < gases.size())
+	{
+		gases[gases_int].gas_process();
+		++gases_int;
+		gases[gases_int].gas_process();
+		++gases_int;
+	}
+	else
+	{
+		gases_int = 0;
+	}
+}
