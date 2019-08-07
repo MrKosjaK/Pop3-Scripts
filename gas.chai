@@ -25,8 +25,8 @@ class Gas
 	def gas_find_spot_near(_crd)
 	{
 		var crd = _crd;
-		crd.Xpos += (G_RANDOM(3)+1 * 256) * this.gas_sign();
-		crd.Zpos += (G_RANDOM(3)+1 * 256) * this.gas_sign();
+		crd.Xpos += (G_RANDOM(3)+1 * 512) * this.gas_sign();
+		crd.Zpos += (G_RANDOM(3)+1 * 512) * this.gas_sign();
 		centre_coord3d_on_block(crd);
 		return crd;
 	}
