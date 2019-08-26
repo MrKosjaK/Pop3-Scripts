@@ -1,0 +1,80 @@
+class Test
+{
+  def Test(_a, _b, _c, _d)
+  {
+    this.a = _a;
+    this.b = _b;
+    this.c = _c;
+    this.d = _d;
+  }
+  
+  def GetFirstItem()
+  {
+    return this.a;
+  }
+  
+  def GetSecondItem()
+  {
+    return this.b;
+  }
+  
+  def GetThirdItem()
+  {
+    return this.c;
+  }
+  
+  def GetFourthItem()
+  {
+    return this.d;
+  }
+  
+  var a;
+  var b;
+  var c;
+  var d;
+}
+
+global test = Vector();
+
+for (var i = 0; i < 5; ++i)
+{
+  test.push_back(Test(i+1,i+2,i+3,i+4));
+}
+
+log("Before load vect size: " + test.size().to_string());
+
+def OnSave(StringVector sv, IntVector iv)
+{
+  var vectSize = test.size();
+  iv.push_back(vectSize);
+  for (var i = 0; i < vectSize; ++i)
+  {
+    iv.push_back(test[i].GetFirstItem());
+    iv.push_back(test[i].GetSecondItem());
+    iv.push_back(test[i].GetThirdItem());
+    iv.push_back(test[i].GetFourthItem());
+  }
+}
+
+def OnLoad(StringVector sv, IntVector iv)
+{
+  if (iv.size() > 0)
+  {
+    var vectSize = iv[0];
+    log("After load vect size: " + vectSize.to_string());
+    
+    var a;
+    var b;
+    var c;
+    var d;
+    
+    for (var i = 1; i < vectSize+1; i = i + 4)
+    {
+      a = iv[i];
+      b = iv[i+1];
+      c = iv[i+2];
+      d = iv[i+3];
+      test.push_back(Test(a,b,c,d));
+    }
+  }
+}
