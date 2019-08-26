@@ -1,0 +1,207 @@
+/*
+  Updated version of random stone heads. by MrKosjaK.
+*/
+
+global discCache = Vector();
+global disc2Cache = Vector();
+global stoneCache = Vector();
+global triggerCache = Vector();
+global objl = ObjectListVector();
+global index = 0;
+global extra_index = 0;
+global delay = gsi.Counts.GameTurn + 12*300;
+
+global myAngles = [
+				0,
+				512,
+				1024,
+				1536
+];
+global mySpells = [M_SPELL_BLAST,
+                   M_SPELL_INSECT_PLAGUE,
+                   M_SPELL_LAND_BRIDGE,
+                   M_SPELL_LIGHTNING_BOLT,
+                   M_SPELL_INVISIBILITY,
+                   M_SPELL_HYPNOTISM,
+                   M_SPELL_WHIRLWIND,
+                   M_SPELL_SWAMP,
+                   M_SPELL_SHIELD,
+                   M_SPELL_FLATTEN,
+                   M_SPELL_EROSION,
+                   M_SPELL_EARTHQUAKE,
+                   M_SPELL_FIRESTORM,
+                   M_SPELL_ANGEL_OF_DEATH,
+                   M_SPELL_VOLCANO,
+                   M_SPELL_BLOODLUST,
+                   M_SPELL_TELEPORT
+];
+
+def register_discovery(a, b, c, e, f)
+{
+  var d = createThing(T_GENERAL, M_GENERAL_DISCOVERY, TRIBE_HOSTBOT, a, false, false);
+  
+  d.u.Discovery.DiscoveryType = 11;
+  d.u.Discovery.DiscoveryModel = b;
+  gsi.SpellsPresentOnLevel |= (1 << b);
+  d.u.Discovery.AvailabilityType = c;
+  d.u.Discovery.TriggerType = f;
+  
+  if (e == TRUE)
+  {
+    discCache.push_back(ObjectProxy(d));
+  }
+  else
+  {
+    disc2Cache.push_back(ObjectProxy(d));
+  }
+}
+
+def register_stone(a, b)
+{
+  var s = createThing(T_SCENERY, M_SCENERY_HEAD, TRIBE_HOSTBOT, a, false, false);
+  
+  s.u.Scenery.HeadType = b;
+  s.AngleXZ = myAngles[G_RANDOM(myAngles.size())];
+  
+  stoneCache.push_back(ObjectProxy(s));
+}
+
+def register_trigger(a, b, c, d, e, f)
+{
+  var t = createThing(T_GENERAL, M_GENERAL_TRIGGER, TRIBE_HOSTBOT, a, false, false);
+  
+  t.u.Trigger.Flags |= (1 << 0);
+  t.u.Trigger.Flags |= (1 << 5);
+	t.u.Trigger.TriggerType = TRIGGER_TYPE_PROXIMITY;
+	t.u.Trigger.CellRadius = 1;
+	t.u.Trigger.NumOccurences = b;
+	t.u.Trigger.TriggerCount = c;
+	t.u.Trigger.InactiveTime = 1;
+  t.u.Trigger.OriginalInactiveTime = 1;
+	t.u.Trigger.PrayTime = d;
+	t.u.Trigger.CreatePlayerOwned = e;
+  t.u.Trigger.HeadThingIdx = f;
+  
+  triggerCache.push_back(ObjectProxy(t));
+}
+
+def link_thing(_t, _tl, a)
+{
+  var t = _t.get();
+  var tl = _tl.get();
+  uninit_thing(tl);
+  t.u.Trigger.EditorThingIdxs[a] = tl.ThingNum;
+}
+
+def FindLandSpot()
+{
+	var tries = 48;
+	var coord = Coord3D();
+	coord.Xpos = G_RANDOM(65536);
+	coord.Zpos = G_RANDOM(65536);
+	while (tries > 0)
+	{
+		var me_pos = world_coord3d_to_map_ptr(coord);
+		if (is_map_elem_sea_or_coast(me_pos) == 0)
+		{
+			if (check_tiles(2, coord) == 0);
+      {
+        break;
+      }
+      else
+      {
+			  coord.Xpos = G_RANDOM(65536);
+			  coord.Zpos = G_RANDOM(65536);
+      }
+		}
+		else
+		{
+			coord.Xpos = G_RANDOM(65536);
+			coord.Zpos = G_RANDOM(65536);
+		}
+		
+		--tries;
+	}
+	
+	return coord;
+}
+
+def check_tiles(radius, coord)
+{
+  var mpo = MapPosXZ();
+  var mpt = MapPosXZ();
+  var diam = 0;
+  var count = 0;
+  var c3d = Coord3D();
+  
+  diam = (radius<<1)+1;
+  mpo.Pos = world_coord3d_to_map_idx(coord);
+  mpo.XZ.X -= (radius<<1);
+  mpo.XZ.Z -= (radius<<1);
+  mpo.XZ.X -= 2;
+  mpo.XZ.Z -= 2;
+  mpt = mpo;
+  
+  for (var i = diam; i > 0; --i) 
+  {
+    mpt.XZ.Z += (1<<1);
+    mpt.XZ.X = mpo.XZ.X;
+    for (var j = diam; j > 0; --j)
+    {
+      mpt.XZ.X += (1<<1);
+    
+      c3d = Coord3D();
+      MAP_XZ_2_WORLD_XYZ(mpt, c3d);
+      centre_coord3d_on_block(c3d);
+      var me = world_coord3d_to_map_ptr(c3d);
+      objl.push_back(me.MapWhoList); 
+    }
+  }
+    
+  ConvertObjectListVectorToThingVector(objl).for_each(fun[count](Thing)
+  {
+    if (Thing.Type == T_BUILDING || Thing.Type == T_SHAPE || Thing.Type == T_SCENERY)
+    {
+      ++count;
+    }
+  });
+    
+  objl.clear();
+  return count;
+}
+
+def OnTurn()
+{
+  if (gsi.Counts.GameTurn > delay)
+  {
+    for (var i = 0; i < 32; ++i)
+    {
+      var c3d = FindLandSpot();
+      var c2d = Coord2D();
+      centre_coord3d_on_block(c3d);
+      coord3D_to_coord2D(c3d, c2d);
+      if (is_map_point_land(c2d) == 1 && check_tiles(2, c3d) == 0)
+      {
+        var r = G_RANDOM(mySpells.size());
+        register_discovery(c3d, mySpells[r], 3, TRUE, 1);
+        register_stone(c3d, 2);
+        register_trigger(c3d, (mySpells.size() - r), (1 + r), (30 + (25*r)), 0, stoneCache[index]);
+        link_thing(triggerCache[index], discCache[index], 0);
+        
+        //Second discovery treasure
+        if (G_RANDOM(4) == 0 && r > 3)
+        {
+          c3d.Xpos -= 512;
+          register_discovery(c3d, mySpells[G_RANDOM(mySpells.size()-4)], 3, FALSE, 1);
+          link_thing(triggerCache[index], disc2Cache[extra_index], 1);
+          
+          ++extra_index;
+        }
+        
+        ++index;
+      }
+    }
+    
+    exit();
+  }
+}
