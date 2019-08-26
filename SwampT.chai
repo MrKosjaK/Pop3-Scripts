@@ -16,18 +16,18 @@ class SwampT
 			pmw.insert_at(v, local_coord);
         }
         
-        pmw[1].Xpos += 256 + 128 + 64 + 32;
-        pmw[2].Xpos -= 256 + 128 + 64 + 32;
-        pmw[3].Zpos += 256 + 128 + 64 + 32;
-        pmw[4].Zpos -= 256 + 128 + 64 + 32;
-        pmw[5].Xpos += 256 + 128 + 64 + 32;
-        pmw[5].Zpos += 256 + 128 + 64 + 32;
-        pmw[6].Xpos += 256 + 128 + 64 + 32;
-        pmw[6].Zpos -= 256 + 128 + 64 + 32;
-        pmw[7].Xpos -= 256 + 128 + 64 + 32;
-        pmw[7].Zpos += 256 + 128 + 64 + 32;
-        pmw[8].Xpos -= 256 + 128 + 64 + 32;
-        pmw[8].Zpos -= 256 + 128 + 64 + 32;
+        pmw[1].Xpos += 512;
+        pmw[2].Xpos -= 512;
+        pmw[3].Zpos += 512;
+        pmw[4].Zpos -= 512;
+        pmw[5].Xpos += 512;
+        pmw[5].Zpos += 512;
+        pmw[6].Xpos += 512;
+        pmw[6].Zpos -= 512;
+        pmw[7].Xpos -= 512;
+        pmw[7].Zpos += 512;
+        pmw[8].Xpos -= 512;
+        pmw[8].Zpos -= 512;
         
         for (var mn = 0; mn < pmw.size(); ++mn)
 		{
@@ -53,22 +53,22 @@ class SwampT
         
         centre_coord3d_on_block(this.coord);
         coordVect[0]        = this.coord;
-        coordVect[1].Xpos   = this.coord.Xpos + 256 + 128 + 64 + 32;
-        coordVect[1].Zpos   = this.coord.Zpos;
-        coordVect[2].Xpos   = this.coord.Xpos - 256 - 128 - 64 - 32;
-        coordVect[2].Zpos   = this.coord.Zpos;
-        coordVect[3].Xpos   = this.coord.Xpos;
-        coordVect[3].Zpos   = this.coord.Zpos + 256 + 128 + 64 + 32;
-        coordVect[4].Xpos   = this.coord.Xpos;
-        coordVect[4].Zpos   = this.coord.Zpos - 256 - 128 - 64 - 32;
-        coordVect[5].Xpos   = this.coord.Xpos + 256 + 128 + 64 + 32;
-        coordVect[5].Zpos   = this.coord.Zpos + 256 + 128 + 64 + 32;
-        coordVect[6].Xpos   = this.coord.Xpos + 256 + 128 + 64 + 32;
-        coordVect[6].Zpos   = this.coord.Zpos - 256 - 128 - 64 - 32;
-        coordVect[7].Xpos   = this.coord.Xpos - 256 - 128 - 64 - 32;
-        coordVect[7].Zpos   = this.coord.Zpos + 256 + 128 + 64 + 32;
-        coordVect[8].Xpos   = this.coord.Xpos - 256 - 128 - 64 - 32;
-        coordVect[8].Zpos   = this.coord.Zpos - 256 - 128 - 64 - 32;
+        coordVect[1].Xpos   = this.coord.Xpos + 512;
+        coordVect[1].Zpos   = this.coord.Zpos;  512
+        coordVect[2].Xpos   = this.coord.Xpos - 512;
+        coordVect[2].Zpos   = this.coord.Zpos;  512
+        coordVect[3].Xpos   = this.coord.Xpos;  512
+        coordVect[3].Zpos   = this.coord.Zpos + 512;
+        coordVect[4].Xpos   = this.coord.Xpos;  512
+        coordVect[4].Zpos   = this.coord.Zpos - 512;
+        coordVect[5].Xpos   = this.coord.Xpos + 512;
+        coordVect[5].Zpos   = this.coord.Zpos + 512;
+        coordVect[6].Xpos   = this.coord.Xpos + 512;
+        coordVect[6].Zpos   = this.coord.Zpos - 512;
+        coordVect[7].Xpos   = this.coord.Xpos - 512;
+        coordVect[7].Zpos   = this.coord.Zpos + 512;
+        coordVect[8].Xpos   = this.coord.Xpos - 512;
+        coordVect[8].Zpos   = this.coord.Zpos - 512;
         
         for (var c = 0; c < coordVect.size(); ++c)
         {
