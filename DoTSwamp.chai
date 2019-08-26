@@ -1,6 +1,6 @@
 /*
 	This script replaces instant-kill swamp with damage over time one. Made by MrKosjaK.
-	Perfomance boost & code polish by Brandan
+	Perfomance boost & code polish by Brandan.
 */
 include("Scripts/SwampT.chai");
 
