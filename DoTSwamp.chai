@@ -7,14 +7,6 @@ include("Scripts/SwampT.chai");
 global activeSwamp  = Vector();
 global swamp_int    = 0;
 
-def DelMist()
-{
-    activeSwamp.for_each(fun(st)
-    {
-        st.destroyMe();
-    });
-}
-
 def CreateSwamp(coord, owner)
 {
 	activeSwamp.push_back(SwampT(coord, owner));
@@ -24,8 +16,16 @@ def InitSwamp()
 {
     if (swamp_int < activeSwamp.size())
     {
-        activeSwamp[swamp_int].setDamage(16 * activeSwamp.size());
-        activeSwamp[swamp_int].processSwamp();
+        if (activeSwamp[swamp_int].getAge() >= gsi.Counts.GameTurn)
+        {
+          activeSwamp[swamp_int].setDamage(16 * activeSwamp.size());
+          activeSwamp[swamp_int].processSwamp();
+        }
+        else
+        {
+          activeSwamp[swamp_int].destroyMe();
+          activeSwamp.erase_at(swamp_int);
+        }
         ++swamp_int;
     }
     else
@@ -37,17 +37,11 @@ def InitSwamp()
 def OnTurn()
 {
     InitSwamp();
-    
-    if (EVERY_2POW_TURNS(12))
-    {
-        DelMist();
-        activeSwamp.clear();
-    }
 }
 
 def OnCreateThing(Thing)
 {
-	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP && Thing.Owner != TRIBE_NEUTRAL && Thing.Owner != TRIBE_HOSTBOT)
+	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP && Thing.Owner != TRIBE_NEUTRAL)
 	{
 		CreateSwamp(Thing.Pos.D3, Thing.Owner);
 		DestroyThing(Thing);

@@ -7,13 +7,14 @@ class SwampT
         this.Grass          = ThingVector();
         this.mapptr_cache   = ObjectListVector();
         this.owner          = _owner;
+        this.deathtick      = gsi.Counts.GameTurn+((12*720)*2);
         
         var  pmw            = Vector();
         for (var v = 0; v < 9; ++v)
         {
             var local_coord = this.coord;
-			centre_coord3d_on_block(local_coord);
-			pmw.insert_at(v, local_coord);
+            centre_coord3d_on_block(local_coord);
+            pmw.insert_at(v, local_coord);
         }
         
         pmw[1].Xpos += 512;
@@ -30,9 +31,9 @@ class SwampT
         pmw[8].Zpos -= 512;
         
         for (var mn = 0; mn < pmw.size(); ++mn)
-		{
-			this.mapptr_cache.push_back(world_coord3d_to_map_ptr(pmw[mn]).MapWhoList);
-		}
+        {
+          this.mapptr_cache.push_back(world_coord3d_to_map_ptr(pmw[mn]).MapWhoList);
+        }
         this.createThings();
     }
     
@@ -40,16 +41,7 @@ class SwampT
     {
         var crd = Coord3D();
         var coordVect = Vector();
-		var colour = [
-			2,
-			-2,
-			-1,
-			1,
-      0,
-      0,
-      0,
-      0
-		]
+        var colour = [2,-2,-1,1,10,11,12,9];
         for (var i = 0; i < 9; ++i)
         {
             coordVect.insert_at(i, crd);
@@ -84,7 +76,10 @@ class SwampT
             var clr_mist = createThing(T_EFFECT, M_EFFECT_SWAMP_MIST, TRIBE_HOSTBOT, c3d, false, false);
             clr_mist.DrawInfo.Alpha = colour[this.owner];
             this.Mist.push_back(clr_mist);
-            this.Grass.push_back(createThing(T_EFFECT, M_EFFECT_REEDY_GRASS, TRIBE_HOSTBOT, c3d, false, false));
+            if (G_RANDOM(2) == 1)
+            {
+              this.Grass.push_back(createThing(T_EFFECT, M_EFFECT_REEDY_GRASS, TRIBE_HOSTBOT, c3d, false, false));
+            }
         });
     }
     
@@ -114,12 +109,17 @@ class SwampT
         });
     }
     
+    def getAge()
+    {
+      return this.deathtick;
+    }
+    
     def setDamage(_dmg)
     {
         this.dmg = _dmg;
     }
     
-	var		owner;
+    var		  owner;
     var     dmg;
     var     coord;
     var     Mist;
