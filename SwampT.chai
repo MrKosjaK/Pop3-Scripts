@@ -7,7 +7,7 @@ class SwampT
         this.Grass          = ThingVector();
         this.mapptr_cache   = ObjectListVector();
         this.owner          = _owner;
-        this.deathtick      = gsi.Counts.GameTurn+((12*720)*2);
+        this.deathtick      = gsi.Counts.GameTurn+(720*4);
         
         var  pmw            = Vector();
         for (var v = 0; v < 9; ++v)

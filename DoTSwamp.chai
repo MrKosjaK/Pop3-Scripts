@@ -41,7 +41,7 @@ def OnTurn()
 
 def OnCreateThing(Thing)
 {
-	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP && Thing.Owner != TRIBE_NEUTRAL)
+	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP && Thing.Owner != TRIBE_NEUTRAL && Thing.Owner != TRIBE_HOSTBOT)
 	{
 		CreateSwamp(Thing.Pos.D3, Thing.Owner);
 		DestroyThing(Thing);
