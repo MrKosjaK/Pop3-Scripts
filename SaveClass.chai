@@ -54,12 +54,15 @@ def OnSave(StringVector sv, IntVector iv)
     iv.push_back(test[i].GetThirdItem());
     iv.push_back(test[i].GetFourthItem());
   }
+  
+  test.clear();
 }
 
 def OnLoad(StringVector sv, IntVector iv)
 {
   if (iv.size() > 0)
   {
+    test.clear();
     var vectSize = iv[0];
     log("After load vect size: " + vectSize.to_string());
     
@@ -67,14 +70,28 @@ def OnLoad(StringVector sv, IntVector iv)
     var b;
     var c;
     var d;
+    var k = 1;
     
-    for (var i = 1; i < vectSize+1; i = i + 4)
+    for (var i = 1; i < vectSize+1; k = k + 4)
     {
+      ++i;
       a = iv[i];
       b = iv[i+1];
       c = iv[i+2];
       d = iv[i+3];
       test.push_back(Test(a,b,c,d));
     }
+  }
+}
+
+def OnTurn()
+{
+  log("Test size: " + test.size().to_string());
+  for (var i = 0; i < test.size(); ++i)
+  {
+    log(test[i].GetFirstItem().to_string());
+    log(test[i].GetSecondItem().to_string());
+    log(test[i].GetThirdItem().to_string());
+    log(test[i].GetFourthItem().to_string());
   }
 }
