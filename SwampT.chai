@@ -107,8 +107,6 @@ class SwampT
                 damage_person(t, this.owner, this.dmg, TRUE); 
             }
         });
-        
-        createThing(T_EFFECT, M_EFFECT_SMOKE, this.owner, this.coord, false, false);
     }
     
     def getAge()
