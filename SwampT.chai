@@ -1,13 +1,13 @@
 class SwampT
 {
-    def SwampT(_coord, _owner)
+    def SwampT(_coord, _owner, _deathtick)
     {
         this.coord          = _coord;
         this.Mist           = ThingVector();
         this.Grass          = ThingVector();
         this.mapptr_cache   = ObjectListVector();
         this.owner          = _owner;
-        this.deathtick      = gsi.Counts.GameTurn+(720*4);
+        this.deathtick      = _deathtick;
         
         var  pmw            = Vector();
         for (var v = 0; v < 9; ++v)
@@ -107,11 +107,23 @@ class SwampT
                 damage_person(t, this.owner, this.dmg, TRUE); 
             }
         });
+        
+        createThing(T_EFFECT, M_EFFECT_SMOKE, this.owner, this.coord, false, false);
     }
     
     def getAge()
     {
       return this.deathtick;
+    }
+    
+    def getPos()
+    {
+      return world_coord3d_to_map_idx(this.coord);
+    }
+    
+    def getOwner()
+    {
+      return this.owner;
     }
     
     def setDamage(_dmg)
@@ -125,4 +137,48 @@ class SwampT
     var     Mist;
     var     Grass;
     var     mapptr_cache;
+}
+
+global activeSwamp  = Vector();
+global swamp_int    = 0;
+
+def OnSave(StringVector sv, IntVector iv)
+{
+  iv.push_back(swamp_int);
+  var swampSize = activeSwamp.size();
+  iv.push_back(swampSize);
+  
+  for (var i = 0; i < swampSize; ++i)
+  {
+    activeSwamp[i].destroyMe();
+    iv.push_back(activeSwamp[i].getPos());
+    iv.push_back(activeSwamp[i].getOwner());
+    iv.push_back(activeSwamp[i].getAge());
+  }
+  
+  activeSwamp.clear();
+}
+
+def OnLoad(StringVector sv, IntVector iv)
+{
+  if (iv.size() > 0)
+  {
+    swamp_int = iv[0];
+    var swampSize = iv[1];
+    
+    var coord = Coord3D();
+    var owner;
+    var deathtick;
+    var k = 2;
+    
+    for (var i = 2; i < swampSize+2; k = k + 3)
+    {
+      ++i;
+      var mapidx = iv[k];
+      map_idx_to_world_coord3d(mapidx, coord);
+      owner = iv[k+1];
+      deathtick = iv[k+2];
+      activeSwamp.push_back(SwampT(coord, owner, deathtick));
+    }
+  }
 }

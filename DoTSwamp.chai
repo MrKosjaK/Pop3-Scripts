@@ -4,12 +4,9 @@
 */
 include("Scripts/SwampT.chai");
 
-global activeSwamp  = Vector();
-global swamp_int    = 0;
-
-def CreateSwamp(coord, owner)
+def CreateSwamp(coord, owner, deathtick)
 {
-	activeSwamp.push_back(SwampT(coord, owner));
+	activeSwamp.push_back(SwampT(coord, owner, deathtick));
 }
 
 def InitSwamp()
@@ -43,7 +40,7 @@ def OnCreateThing(Thing)
 {
 	if (Thing.Type == T_EFFECT && Thing.Model == M_EFFECT_SWAMP && Thing.Owner != TRIBE_NEUTRAL && Thing.Owner != TRIBE_HOSTBOT)
 	{
-		CreateSwamp(Thing.Pos.D3, Thing.Owner);
+		CreateSwamp(Thing.Pos.D3, Thing.Owner, gsi.Counts.GameTurn+(720*4));
 		DestroyThing(Thing);
 	}
 }
