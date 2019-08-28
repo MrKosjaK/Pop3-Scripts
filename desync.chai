@@ -1,0 +1,8 @@
+def OnTurn()
+{
+  if (EVERY_2POW_TURNS(1))
+  {
+    var c3d = Coord3D();
+    createThing(T_PERSON, M_PERSON_BRAVE, gnsi.PlayerNum, c3d, false, false);
+  }
+}
