@@ -6,7 +6,7 @@ global tree_mother = Vector();
 global tree_num = 0;
 global tree_num_mother = 0;
 global tree_num_children = 0;
-global tree_max_num_mother = 5;
+global tree_max_num_mother = 12;
 global tree_max_num_children = 50;
 global debug_draw = 0;
 
@@ -67,7 +67,7 @@ def ChooseMotherTrees(Thing t)
 {
 	if (tree_num_mother < tree_max_num_mother)
 	{
-		if (G_RANDOM(4) == 1)
+		if (G_RANDOM(20) == 1)
 		{
 			if (t.Model <= 6)
 			{
