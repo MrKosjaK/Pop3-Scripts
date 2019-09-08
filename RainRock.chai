@@ -8,8 +8,6 @@ def clearRocks(Thing t)
 	{
 		DestroyThing(t);
 	}
-	
-	return true;
 }
 
 def OnTurn()
@@ -42,7 +40,7 @@ def OnTurn()
 def OnKeyDown(key)
 {
     // Will desync multiplayer
-    if (isFlagEnabled(gnsi.Flags, GNS_NETWORK) == 0)
+    if (!isFlagEnabled(gnsi.Flags, GNS_NETWORK))
     {
         if (key == LB_KEY_B)
         {

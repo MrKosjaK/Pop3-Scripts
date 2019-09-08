@@ -61,8 +61,6 @@ def CountAllTrees(Thing t)
 	{
 		++tree_num;
 	}
-	
-	return true;
 }
 
 def ChooseMotherTrees(Thing t)
@@ -78,10 +76,10 @@ def ChooseMotherTrees(Thing t)
 			}
 		}
 		
-		return true;
+		return;
 	}
 	
-	return false;
+	OBJECT_BREAK();
 }
 
 def randSign()
@@ -105,8 +103,8 @@ def Spread(thing)
 			var child = thing.get();
 			var NewMapPos = Coord3D();
 			NewMapPos = child.Pos.D3;
-			NewMapPos.Xpos += (G_RANDOM(8) * 512) * randSign();
-			NewMapPos.Zpos += (G_RANDOM(8) * 512) * randSign();
+			NewMapPos.Xpos += (G_RANDOM(8) * 256) * randSign();
+			NewMapPos.Zpos += (G_RANDOM(8) * 256) * randSign();
 			CREATE_THING_WITH_PARAMS4(T_SCENERY,M_SCENERY_DORMANT_TREE,TRIBE_HOSTBOT,NewMapPos,T_SCENERY,G_RANDOM(6),16,16);
 			++tree_num_children
 		}
@@ -140,7 +138,7 @@ def InitMother()
 					createThing(T_EFFECT,M_EFFECT_SMOKE,TRIBE_HOSTBOT,treeThing.Pos.D3,false,false);
 				}
 				
-				if (treeThing.u.Scenery.ResourceRemaining == 400)
+				if (treeThing.u.Scenery.ResourceRemaining >= 399)
 				{
 					treeThing.u.Scenery.GrowthRate = -2;
 					treeThing.u.Scenery.ResourceRemaining -= 1;
