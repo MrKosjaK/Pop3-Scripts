@@ -1,8 +1,0 @@
-include("Scripts/world_util.chai");
-
-global util = world_utility();
-
-util.spawn_wilds_at_random_pos(100);
-util.spawn_dormant_trees_at_random_pos(50, 0);
-
-exit();

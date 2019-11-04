@@ -1,8 +1,0 @@
-/*
-	Disables game loss/win state. Made by Brandan. (I took a piece of code).
-*/
-
-enableFlag(gnsi.GameParams.Flags2, GPF2_GAME_NO_WIN);
-disableFlag(gnsi.Flags, GNS_LEVEL_COMPLETE);
-disableFlag(gnsi.Flags, GNS_LEVEL_FAILED);
-exit();
