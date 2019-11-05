@@ -13,7 +13,7 @@ announceTicksDelay = 180
 announceDelay = 240
 announceInterval = _gsi.Counts.GameTurn + (12*announceDelay)
 playerPeople = {0,0,0,0,0,0,0,0}
-playerNames = {"BLUE","RED", "YELLOW","GREEN","CYAN","MAGENTA","BLACK","ORANGE"}
+playerNames = {"BLUE","RED","YELLOW","GREEN","CYAN","MAGENTA","BLACK","ORANGE"}
 
 function OnTurn()
   if (_gsi.Counts.GameTurn > announceInterval) then
