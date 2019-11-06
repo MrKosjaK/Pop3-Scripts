@@ -19,21 +19,51 @@ IPlayer.register = function(pn)
     plr.mynum = pn
     plr.level = 1
     plr.exp = 0
+    plr.totalkills = 0
     plr.mult = 1.00
     plr.expN = math.floor((100*plr.mult) * plr.level)
     
     function plr:check_if_enough_exp()
       if (plr.exp > plr.expN) then
+        plr.mult = plr.mult + 0.02
         plr.exp = 0
-        plr.mult = plr.mult + 0.05
         plr.level = plr.level+1
-        plr.expN = math.floor((100*plr.mult) * plr.level)
+        plr.expN = math.ceil((100^plr.mult))
         log_msg(TRIBE_NEUTRAL, "Player " .. plr.mynum .. " has just achieved " .. plr.level .. " level!")
       end
     end
     
+    function plr:calc_exp_from_kills()
+      local kills = 0
+      
+      for i = 0,MAX_NUM_REAL_PLAYERS-1 do
+        if (i ~= plr.mynum) then
+          kills = kills + _gsi.Players[plr.mynum].PeopleKilled[i]
+        end
+      end
+      
+      if (kills > plr.totalkills) then
+        local to_add = kills - plr.totalkills
+        plr:increment_exp(to_add*2)
+        plr.totalkills = plr.totalkills + to_add
+      end
+    end
+    
+    function plr:boost_me()
+      mana_to_give = math.ceil(plr.mult*5)
+      _gsi.Players[plr.mynum].Mana = _gsi.Players[plr.mynum].Mana + mana_to_give
+    end
+    
+    function plr:get_pn()
+      return plr.mynum
+    end
+    
     function plr:get_mult()
       return plr.mult
+    end
+    
+    function plr:get_mana_boost()
+      return math.ceil(plr.mult*5)
     end
     
     function plr:get_exp()
@@ -56,16 +86,17 @@ IPlayer.register = function(pn)
 end
 
 for i = 0,MAX_NUM_REAL_PLAYERS-1 do
-  if (_gsi.Players[i].NumPeople ~= 0) then
     local this_player = IPlayer.register(i)
     table.insert(players, this_player)
-  end
 end
 
 function OnTurn()
-  if (EVERY_2POW_TURNS(2)) then
-    players[G_RANDOM(4)+1]:increment_exp(G_RANDOM(50)+1)
-    players[G_RANDOM(4)+1]:check_if_enough_exp()
+  if (EVERY_2POW_TURNS(1)) then
+    for i in ipairs (players) do
+      players[i]:check_if_enough_exp()
+      players[i]:calc_exp_from_kills()
+      players[i]:boost_me()
+    end
   end
 end
 
@@ -79,10 +110,11 @@ function OnCreateThing(t)
 end
 
 function OnFrame()
-  for i = 0,MAX_NUM_REAL_PLAYERS-1 do
-    if (_gsi.Players[i].NumPeople ~= 0) then
-      LbDraw_PropText(math.floor(ScreenWidth()/6),math.floor((ScreenHeight()/5))+i*16, "" .. players[i+1]:get_exp(), COLOUR(CLR_RED))
-      LbDraw_PropText(math.floor(ScreenWidth()/6+48),(math.floor(ScreenHeight()/5))+i*16, "" .. players[i+1]:get_left_exp(), COLOUR(CLR_GREEN))
+  for i in ipairs (players) do
+    if (_gsi.Players[players[i]:get_pn()].NumPeople ~= 0) then
+      LbDraw_PropText(math.floor(ScreenWidth()/6),math.floor((ScreenHeight()/5))+i*16, "" .. players[i]:get_exp(), COLOUR(CLR_RED))
+      LbDraw_PropText(math.floor(ScreenWidth()/6+48),(math.floor(ScreenHeight()/5))+i*16, "" .. players[i]:get_exp_next(), COLOUR(CLR_GREEN))
+      LbDraw_PropText(math.floor(ScreenWidth()/6+30),(math.floor(ScreenHeight()/5))+i*16, "" .. players[i]:get_mana_boost(), COLOUR(CLR_GREEN))
     end
   end
 end
