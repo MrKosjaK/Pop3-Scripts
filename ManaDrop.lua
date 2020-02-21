@@ -1,6 +1,6 @@
 --[[
   Author: MrKosjaK
-  Version: 1.0
+  Version: 1.1
   Description: Modifies vanilla mana gain/loss whenever your shaman dies.
   And as an additional feature it's being dropped as a loot!
 ]]
@@ -39,7 +39,18 @@ local function calcMana(pn)
 end
 
 local function dropMana(amount,coord)
-  local mana_drop = createThing(T_GENERAL,M_GENERAL_DISCOVERY,TRIBE_HOSTBOT,coord,false,false)
+  local coord_to_spawn = coord
+  SearchMapCells(CIRCULAR, 0, 0, 16, world_coord3d_to_map_idx(coord), function(me)
+    if (is_map_elem_all_land(me) == 1) then
+      local c2d = Coord2D.new()
+      map_ptr_to_world_coord2d(me, c2d)
+      randomize_coord_on_block(c2d)
+      coord2D_to_coord3D(c2d,coord_to_spawn)
+      return false
+    end
+    return true
+  end)
+  local mana_drop = createThing(T_GENERAL,M_GENERAL_DISCOVERY,TRIBE_HOSTBOT,coord_to_spawn,false,false)
   mana_drop.u.Discovery.DiscoveryType = 6
   mana_drop.u.Discovery.DiscoveryModel = 5
   mana_drop.u.Discovery.AvailabilityType = 3
@@ -61,6 +72,7 @@ end
 
 local function dropSpell(pn,coord)
   local rolls = 128
+  local coord_to_spawn = coord
   local return_model = 0
   while (rolls > 0) do
     rolls=rolls-1
@@ -75,7 +87,17 @@ local function dropSpell(pn,coord)
     end
   end
   if (return_model ~= 0) then
-    local spell_drop = createThing(T_GENERAL,M_GENERAL_DISCOVERY,TRIBE_HOSTBOT,coord,false,false)
+    SearchMapCells(CIRCULAR, 0, 0, 16, world_coord3d_to_map_idx(coord), function(me)
+      if (is_map_elem_all_land(me) == 1) then
+        local c2d = Coord2D.new()
+        map_ptr_to_world_coord2d(me, c2d)
+        centre_coord_on_block(c2d)
+        coord2D_to_coord3D(c2d,coord_to_spawn)
+        return false
+      end
+      return true
+    end)
+    local spell_drop = createThing(T_GENERAL,M_GENERAL_DISCOVERY,TRIBE_HOSTBOT,coord_to_spawn,false,false)
     spell_drop.u.Discovery.DiscoveryType = 11
     spell_drop.u.Discovery.DiscoveryModel = return_model
     spell_drop.u.Discovery.AvailabilityType = 1
