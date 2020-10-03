@@ -1,6 +1,6 @@
 --[[
   Author: MrKosjaK
-  Version: 1.1
+  Version: 1.1a
   Description: Modifies vanilla mana gain/loss whenever your shaman dies.
   And as an additional feature it's being dropped as a loot!
 ]]
@@ -39,7 +39,9 @@ local function calcMana(pn)
 end
 
 local function dropMana(amount,coord)
-  local coord_to_spawn = coord
+  local coord_to_spawn = Coord3D.new()
+  coord_to_spawn.Xpos = coord.Xpos
+  coord_to_spawn.Zpos = coord.Zpos
   SearchMapCells(CIRCULAR, 0, 0, 16, world_coord3d_to_map_idx(coord), function(me)
     if (is_map_elem_all_land(me) == 1) then
       local c2d = Coord2D.new()
@@ -72,7 +74,9 @@ end
 
 local function dropSpell(pn,coord)
   local rolls = 128
-  local coord_to_spawn = coord
+  local coord_to_spawn = Coord3D.new()
+  coord_to_spawn.Xpos = coord.Xpos
+  coord_to_spawn.Zpos = coord.Zpos
   local return_model = 0
   while (rolls > 0) do
     rolls=rolls-1
