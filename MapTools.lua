@@ -1,19 +1,22 @@
-import(Module_System)
-import(Module_ImGui)
-import(Module_Game)
-import(Module_Helpers)
-import(Module_Defines)
-import(Module_Globals)
 import(Module_DataTypes)
+import(Module_Defines)
+import(Module_Game)
+import(Module_Globals)
+import(Module_Helpers)
+import(Module_ImGui)
 import(Module_Level)
 import(Module_Map)
-import(Module_String)
 import(Module_Objects)
-import(Module_Table)
 import(Module_Person)
+import(Module_Players)
+import(Module_String)
+import(Module_System)
+import(Module_Table)
 
 local gs = gsi()
-local show_window = false
+local pl_str = {"Blue","Red","Yellow","Green","Cyan","Purple","Black","Orange"}
+local show_maptools_window = false
+local show_mapinfo_window = false
 world_mass = {
   water = 0,
   coast = 0,
@@ -27,7 +30,8 @@ world_ptrs = {
 check_boxes = {
   checkCliff = {false,false},
   checkObstacles = {false,true},
-  checkRandomWild = {false,false}
+  checkRandomWild = {false,false},
+  checkOverlap = {false,true}
 }
 radios = {
   wildMethodGen = {false,0}
@@ -43,7 +47,8 @@ sliders = {
 states = {
   checkCliff = false,
   checkObstacles = true,
-  checkRandomWild = false
+  checkRandomWild = false,
+  checkOverlap = true
 }
 variables = {
   heightMin = 0,
@@ -52,6 +57,14 @@ variables = {
   treeDensity = 0,
   wildChance = 5,
   wildAmount = 4
+}
+mapinfo_vars = {
+  wildCount = 0,
+  treesCount = 0,
+  triggerCount = 0,
+  headsCount = 0,
+  vaultsCount = 0,
+  totalPop = 0
 }
 
 local function me_to_c3d(me)
@@ -62,10 +75,52 @@ local function me_to_c3d(me)
   return c3d
 end
 
+local function me_to_c2d(me)
+  local c2d = Coord2D.new()
+  map_ptr_to_world_coord2d(me,c2d)
+  return c2d
+end
+
 local function xz_to_me(x,z)
   local c3d = Coord3D.new()
   c3d = MAP_XZ_2_WORLD_XYZ(x,z)
   return world_coord3d_to_map_ptr(c3d)
+end
+
+local function calc_objects_of_model(ty,m)
+  local count = 0
+  ProcessGlobalTypeList(ty, function(t)
+  if (t.Model == m) then
+    count=count+1
+  end
+  return true
+  end)
+
+  return count
+end
+
+local function calc_total_pop()
+  local count = 0
+  ProcessGlobalSpecialListAll(PEOPLELIST,function(t)
+    if (t.Model ~= 1 and t.Model ~= 8) then
+      count=count+1
+    end
+  return true
+  end)
+
+  return count
+end
+
+local function calc_trees()
+  local count = 0
+  ProcessGlobalTypeList(T_SCENERY, function(t)
+  if (t.Model <= 6) then
+    count=count+1
+  end
+  return true
+  end)
+
+  return count
 end
 
 local function calc_coast_part()
@@ -74,7 +129,7 @@ local function calc_coast_part()
     if (is_map_elem_coast(gs.Level.MapElements[i]) ~= 0) then
       count=count+1
       table.insert(world_ptrs.coast_ptrs, gs.Level.MapElements[i])
-      createThing(T_EFFECT,M_EFFECT_SMOKE,TRIBE_HOSTBOT,me_to_c3d(gs.Level.MapElements[i]),false,false)
+      --createThing(T_EFFECT,M_EFFECT_SMOKE,TRIBE_HOSTBOT,me_to_c3d(gs.Level.MapElements[i]),false,false)
     end
   end
   return count
@@ -86,7 +141,7 @@ local function calc_land_part()
     if (is_map_elem_all_land(gs.Level.MapElements[i]) == 1) then
       count=count+1
       table.insert(world_ptrs.land_ptrs, gs.Level.MapElements[i])
-      createThing(T_EFFECT,M_EFFECT_LIGHTNING_ELEM,TRIBE_HOSTBOT,me_to_c3d(gs.Level.MapElements[i]),false,false)
+      --createThing(T_EFFECT,M_EFFECT_LIGHTNING_ELEM,TRIBE_HOSTBOT,me_to_c3d(gs.Level.MapElements[i]),false,false)
     end
   end
   return count
@@ -97,17 +152,17 @@ local function calc_water_part()
   for i=0,(128*128)-1 do
     if (is_map_elem_all_sea(gs.Level.MapElements[i]) == 2) then
       count=count+1
-      createThing(T_EFFECT,M_EFFECT_SPRITE_CIRCLES,TRIBE_HOSTBOT,me_to_c3d(gs.Level.MapElements[i]),false,false)
+      --createThing(T_EFFECT,M_EFFECT_SPRITE_CIRCLES,TRIBE_HOSTBOT,me_to_c3d(gs.Level.MapElements[i]),false,false)
     end
   end
   return count
 end
 
-local function area_check_for_obstacles(me,r)
+local function area_check_for_obstacles(elem,r)
   local mapXZ = MapPosXZ.new()
-  mapXZ.Pos = MAP_ELEM_PTR_2_IDX(me)
-  mapXZ.XZ.X = mapXZ.XZ.X-r
-  mapXZ.XZ.Z = mapXZ.XZ.Z-r
+  mapXZ.Pos = MAP_ELEM_PTR_2_IDX(elem)
+  mapXZ.XZ.X = mapXZ.XZ.X-r+1
+  mapXZ.XZ.Z = mapXZ.XZ.Z-r+1
   local x = 0
   local z = 0
   local count = 0
@@ -116,6 +171,12 @@ local function area_check_for_obstacles(me,r)
     for i=0,r do
       z = mapXZ.XZ.Z + i*2
       local me = xz_to_me(x,z)
+      --is spot walkable?
+      if (states.checkCliff) then
+        if (is_point_steeper_than(me_to_c2d(me),350) ~= 0) then
+          do return end
+        end
+      end
       me.MapWhoList:processList(function(t)
         if (t.Type == T_SCENERY) then
           if (t.Model > 6) then
@@ -132,15 +193,15 @@ local function area_check_for_obstacles(me,r)
       end)
     end
   end
-  
+
   return count
 end
 
 local function tree_density_spawn(me,r)
   local mapXZ = MapPosXZ.new()
   mapXZ.Pos = MAP_ELEM_PTR_2_IDX(me)
-  mapXZ.XZ.X = mapXZ.XZ.X-r
-  mapXZ.XZ.Z = mapXZ.XZ.Z-r
+  mapXZ.XZ.X = mapXZ.XZ.X-(r+1)
+  mapXZ.XZ.Z = mapXZ.XZ.Z-(r+1)
   local x = 0
   local z = 0
   for i=0,r do
@@ -148,8 +209,19 @@ local function tree_density_spawn(me,r)
     for i=0,r do
       z = mapXZ.XZ.Z + i*2
       local me = xz_to_me(x,z)
-      if (me.MapWhoList:isEmpty()) then
+      if (me.MapWhoList:isEmpty() and (not me.ShapeOrBldgIdx:isNull())) then
         if (variables.treeDensity > G_RANDOM(100)) then
+          if (states.checkCliff) then
+            if (is_point_steeper_than(me_to_c2d(me),350) ~= 0) then
+              do return end
+            end
+          end
+
+          if (states.checkObstacles) then
+            if (area_check_for_obstacles(me,4) ~= 0) then
+              do return end
+            end
+          end
           createThing(T_SCENERY,G_RANDOM(6)+1,TRIBE_HOSTBOT,me_to_c3d(me),false,false)
         end
       end
@@ -175,7 +247,7 @@ local function spawn_wild_in_devils_style(c3d)
     new_c3d.Xpos = new_c3d.Xpos+512
     new_c3d.Zpos = new_c3d.Zpos+512
   end
-  
+
   centre_coord3d_on_block(new_c3d)
   local wild = createThing(T_PERSON,M_PERSON_WILD,TRIBE_HOSTBOT,new_c3d,false,false)
   set_person_new_state(wild,S_PERSON_STAND_FOR_TIME)
@@ -189,13 +261,13 @@ local function check_for_wild_spawn_coast(me,r,amount)
   local buffer = {}
   local mapXZ = MapPosXZ.new()
   mapXZ.Pos = MAP_ELEM_PTR_2_IDX(me)
-  mapXZ.XZ.X = mapXZ.XZ.X-r
-  mapXZ.XZ.Z = mapXZ.XZ.Z-r
+  mapXZ.XZ.X = mapXZ.XZ.X-(r+1)
+  mapXZ.XZ.Z = mapXZ.XZ.Z-(r+1)
   local x = 0
   local z = 0
-  for i=0,r do
+  for i=0,r+1 do
     x = mapXZ.XZ.X + i*2
-    for i=0,r do
+    for i=0,r+1 do
       z = mapXZ.XZ.Z + i*2
       local me = xz_to_me(x,z)
       if (is_map_elem_all_land(me) == 1) then
@@ -203,7 +275,7 @@ local function check_for_wild_spawn_coast(me,r,amount)
       end
     end
   end
-  
+
   for i=0,limit do
     local me = buffer[G_RANDOM(#buffer)+1]
     if (me.MapWhoList:isEmpty()) then
@@ -229,28 +301,108 @@ local function check_for_wild_spawn_land(me)
   end
 end
 
-local function check_for_spawn_tree(me)
-  local c2d = Coord2D.new()
-  map_ptr_to_world_coord2d(me,c2d)
-  if (states.checkCliff) then
-    if (is_point_steeper_than(c2d,350) == 0) then
-      createThing(T_SCENERY,G_RANDOM(6)+1,TRIBE_HOSTBOT,me_to_c3d(me),false,false)
-      tree_density_spawn(me,3)
+local function area_check_for_spawn_req(elem,r)
+  local mapXZ = MapPosXZ.new()
+  mapXZ.Pos = MAP_ELEM_PTR_2_IDX(elem)
+  mapXZ.XZ.X = mapXZ.XZ.X-(r+1)
+  mapXZ.XZ.Z = mapXZ.XZ.Z-(r+1)
+  local x = 0
+  local z = 0
+  local count = 0
+  for i=0,r+1 do
+    x = mapXZ.XZ.X + i*2
+    for i=0,r+1 do
+      z = mapXZ.XZ.Z + i*2
+      local me = xz_to_me(x,z)
+
+      if (not me.MapWhoList:isEmpty()) then
+        me.MapWhoList:processList(function(t)
+          if (t.Type == T_SCENERY) then
+            if (t.Model > 6) then
+              count=count+1
+            end
+          end
+          if (t.Type == T_SHAPE or t.Type == T_BUILDING) then
+            count=count+1
+          end
+          return true
+        end)
+      end
+
+      if (not me.ShapeOrBldgIdx:isNull()) then
+        count=count+1
+      end
     end
-  else
-    createThing(T_SCENERY,G_RANDOM(6)+1,TRIBE_HOSTBOT,me_to_c3d(me),false,false)
-    tree_density_spawn(me,3)
   end
+
+  return count
+end
+
+local function check_for_spawn_tree(me)
+  --run through checks before actually spawning
+  --is spot free?
+  if (states.checkOverlap) then
+    if (not me.MapWhoList:isEmpty()) then
+      do return end
+    end
+  end
+  --is spot walkable?
+  if (states.checkCliff) then
+    if (is_point_steeper_than(me_to_c2d(me),384) ~= 0) then
+      do return end
+    end
+  end
+  --is spot obstacle free around?
+  if (states.checkObstacles) then
+    if (area_check_for_spawn_req(me,2) ~= 0) then
+      do return end
+    end
+  end
+  --spawn tree
+  createThing(T_SCENERY,G_RANDOM(6)+1,TRIBE_HOSTBOT,me_to_c3d(me),false,false)
+  tree_density_spawn(me,3)
 end
 
 function OnKeyDown(k)
-  if (k == LB_KEY_TAB) then
-    show_window = not show_window
+  if (k == LB_KEY_O) then
+    show_maptools_window = not show_maptools_window
+  end
+  if (k == LB_KEY_I) then
+    show_mapinfo_window = not show_mapinfo_window
   end
 end
 
 function OnImGuiFrame()
-  if (show_window) then
+  if (show_mapinfo_window) then
+    imgui.Begin('Map Info',nil,ImGuiWindowFlags_AlwaysAutoResize)
+    if (imgui.TreeNode("Player Info")) then
+      for i=0,7 do
+        imgui.TextUnformatted(pl_str[i+1] .. ": " .. gs.Players[i].NumPeople)
+      end
+
+      imgui.TreePop()
+    end
+
+    if (imgui.TreeNode("Object Info")) then
+      imgui.TextUnformatted("Wilds: " .. mapinfo_vars.wildCount)
+      imgui.TextUnformatted("Trees: " .. mapinfo_vars.treesCount)
+      imgui.TextUnformatted("Triggers: " .. mapinfo_vars.triggerCount)
+      imgui.TextUnformatted("Stone Heads: " .. mapinfo_vars.headsCount)
+      imgui.TextUnformatted("Vaults: " .. mapinfo_vars.vaultsCount)
+
+      imgui.TreePop()
+    end
+
+    if (imgui.TreeNode("World Mass")) then
+      imgui.TextUnformatted(string.format("Water: %.2f",(world_mass.water*100)/16384) .. "%")
+      imgui.TextUnformatted(string.format("Coast: %.2f",(world_mass.coast*100)/16384) .. "%")
+      imgui.TextUnformatted(string.format("Land: %.2f",(world_mass.land*100)/16384) .. "%")
+
+      imgui.TreePop()
+    end
+    imgui.End()
+  end
+  if (show_maptools_window) then
     imgui.Begin('Map Tools',nil,ImGuiWindowFlags_AlwaysAutoResize)
     --Calculate ME
     if (imgui.Button('Recalculate Mass')) then
@@ -268,21 +420,13 @@ function OnImGuiFrame()
         if (is_map_elem_all_land(me) == 1) then
           if (G_RANDOM(200) < variables.treePercent) then
             if (me.Alt > variables.heightMin and me.Alt < variables.heightMax) then
-              if (states.checkObstacles) then
-                local num = area_check_for_obstacles(me,3)
-                if (num == 0) then
-                  check_for_spawn_tree(me,count)
-                  count=count+1
-                end
-              else
-                check_for_spawn_tree(me,count)
-                count=count+1
-              end
+              check_for_spawn_tree(me)
+              count=count+1
             end
           end
         end
       end
-      
+
       log("Generated: " .. count .. " trees!")
     end
     imgui.SameLine()
@@ -293,7 +437,7 @@ function OnImGuiFrame()
         if (t.Model <= 6) then
           DestroyThing(t)
         end
-        
+
         return true
       end)
     end
@@ -344,7 +488,7 @@ function OnImGuiFrame()
               check_for_wild_spawn_coast(world_coord3d_to_map_ptr(t.Pos.D3),5,variables.wildAmount)
             end
           end
-          
+
           return true
         end)
       elseif (radios.wildMethodGen[2] == 3) then
@@ -352,7 +496,7 @@ function OnImGuiFrame()
           if (t.Model <= 6) then
             spawn_wild_in_devils_style(t.Pos.D3)
           end
-          
+
           return true
         end)
       end
@@ -364,6 +508,8 @@ function OnImGuiFrame()
         DestroyThing(t)
         return true
       end)
+
+      log("You cruel...")
     end
     imgui.PushItemWidth(125)
     --Wild Chance
@@ -406,18 +552,35 @@ function OnImGuiFrame()
       states.checkObstacles = check_boxes.checkObstacles[2]
       log("Check box state changed!" .. tostring(states.checkObstacles))
     end
+    --Check Overlap
+    check_boxes.checkOverlap[1], check_boxes.checkOverlap[2] = imgui.Checkbox("Check Overlap", check_boxes.checkOverlap[2])
+    if (check_boxes.checkOverlap[1]) then
+      states.checkOverlap = check_boxes.checkOverlap[2]
+      log("Check box state changed!" .. tostring(states.checkOverlap))
+    end
     imgui.End()
   end
 end
 
+--pre calc percentages
 world_mass.water = calc_water_part()
 world_mass.coast = calc_coast_part()
 world_mass.land = calc_land_part()
 
 function OnTurn()
-  --tree_density_spawn(world_ptrs.coast_ptrs[1], 2)
+  if (show_mapinfo_window) then --save cpu
+    if (gs.Counts.GameTurn % 12 == 0) then
+      mapinfo_vars.totalPop = calc_total_pop()
+      mapinfo_vars.vaultsCount = calc_objects_of_model(T_BUILDING,M_BUILDING_LIBRARY)
+      mapinfo_vars.headsCount = calc_objects_of_model(T_SCENERY,M_SCENERY_HEAD)
+      mapinfo_vars.triggerCount = calc_objects_of_model(T_GENERAL,M_GENERAL_TRIGGER)
+      mapinfo_vars.wildCount = calc_objects_of_model(T_PERSON,M_PERSON_WILD)
+      mapinfo_vars.treesCount = calc_trees()
+    end
+  end
 end
 
+--output percentages
 log("Percentages: " .. "\n Water: " .. string.format("%.2f",(world_mass.water*100)/16384) .. "\n Coast: " .. string.format("%.2f",(world_mass.coast*100)/16384) .. "\n Land: " .. string.format("%.2f",(world_mass.land*100)/16384))
 
-log("Script initialized.")
+log_msg(TRIBE_HOSTBOT,"MapTools has been loaded! \n Press O to open tool menu. \n Press I to open info menu.")
