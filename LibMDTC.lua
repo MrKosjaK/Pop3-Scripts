@@ -3,7 +3,7 @@ import(Module_Map)
 --[[
 Name: Map Data Type Conversion
 
-Description: Provides a few various functiions to help user with converting between map data types.
+Description: Provides a few various functions to help user with converting between map data types.
 
 Usage: Drop into "Scripts" folder inside your populous installation.
   include("LibMDTC.lua")
@@ -48,13 +48,13 @@ function MapCoord_to_MapElement(x,z)
   return me
 end
 
-function WorldCoord2D_to_MapCoord(c3d)
+function WorldCoord3D_to_MapCoord(c3d)
   local mp = MapPosXZ.new()
   mp.Pos = world_coord3d_to_map_idx(c3d)
   return mp.XZ.X, mp.XZ.Z
 end
 
-function WorldCoord3D_to_MapCoord(c2d)
+function WorldCoord2D_to_MapCoord(c2d)
   local mp = MapPosXZ.new()
   mp.Pos = world_coord2d_to_map_idx(c2d)
   return mp.XZ.X, mp.XZ.Z
